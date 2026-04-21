@@ -22,7 +22,7 @@ const props = defineProps({
                     'The day our story began, with shy smiles and a feeling that this moment would stay forever.',
             },
             {
-                image: '/image/hero.jpg',
+                image: '/image/one.jpg',
                 date: 'Feb 14, 2021',
                 title: 'Our Sweet Promise',
                 description:
@@ -36,7 +36,7 @@ const props = defineProps({
                     'Wrapped in winter lights, we made simple memories that still make our hearts glow.',
             },
             {
-                image: '/image/hero.jpg',
+                image: '/image/two.jpg',
                 date: 'Today',
                 title: 'Still Growing Together',
                 description:
@@ -48,49 +48,77 @@ const props = defineProps({
 
 const ROW_HEIGHT = 320;
 const TOP_OFFSET = 120;
-const LEFT_X = 420;
-const RIGHT_X = 580;
+const NODE_MID_OFFSET = 78;
+const LEFT_X = 385;
+const RIGHT_X = 615;
 
 const ROADMAP_MASK_ID = 'roadmap-path-reveal-mask';
 const sectionRef = ref(null);
 const pathRef = ref(null);
+const viewportWidth = ref(1280);
 const memoryNodes = ref([]);
 const outerDots = ref([]);
 const innerDots = ref([]);
 const imageNodes = ref([]);
 const cardNodes = ref([]);
+const imageOrientations = ref([]);
 let gsapContext = null;
+
+const rowHeight = computed(() => {
+    if (viewportWidth.value < 640) return 230;
+    if (viewportWidth.value < 768) return 270;
+    return ROW_HEIGHT;
+});
+
+const nodeMidOffset = computed(() => {
+    if (viewportWidth.value < 640) return 58;
+    if (viewportWidth.value < 768) return 68;
+    return NODE_MID_OFFSET;
+});
+
+const imageHeight = computed(() => {
+    if (viewportWidth.value < 640) return 112;
+    if (viewportWidth.value < 768) return 160;
+    return 208;
+});
+
+const lastNodeTop = computed(() => {
+    if (!props.memories.length) return TOP_OFFSET;
+    return TOP_OFFSET + (props.memories.length - 1) * rowHeight.value;
+});
+
+const lineEndY = computed(() => lastNodeTop.value + imageHeight.value);
 
 const totalHeight = computed(() => {
     if (!props.memories.length) return 420;
-    return (
-        TOP_OFFSET * 1.6 + ROW_HEIGHT * Math.max(props.memories.length - 1, 0)
-    );
+    return lineEndY.value;
 });
 
 const points = computed(() =>
     props.memories.map((_, index) => ({
         x: index % 2 === 0 ? LEFT_X : RIGHT_X,
-        y: TOP_OFFSET + index * ROW_HEIGHT,
+        y: TOP_OFFSET + index * rowHeight.value + nodeMidOffset.value,
     })),
 );
 
 const curvePath = computed(() => {
     if (!points.value.length) return '';
     if (points.value.length === 1)
-        return `M ${points.value[0].x} ${points.value[0].y}`;
+        return `M ${points.value[0].x} ${points.value[0].y} L ${points.value[0].x} ${lineEndY.value}`;
 
     let path = `M ${points.value[0].x} ${points.value[0].y}`;
     for (let i = 1; i < points.value.length; i += 1) {
         const prev = points.value[i - 1];
         const curr = points.value[i];
-        const bend = ROW_HEIGHT * 0.42;
+        const bend = rowHeight.value * 0.42;
         const cp1x = prev.x;
         const cp1y = prev.y + bend;
         const cp2x = curr.x;
         const cp2y = curr.y - bend;
         path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
     }
+    const lastPoint = points.value[points.value.length - 1];
+    path += ` L ${lastPoint.x} ${lineEndY.value}`;
     return path;
 });
 
@@ -99,7 +127,7 @@ const svgViewBox = computed(
 );
 
 const nodeStyle = (index) => ({
-    top: `${TOP_OFFSET + index * ROW_HEIGHT}px`,
+    top: `${TOP_OFFSET + index * rowHeight.value}px`,
 });
 
 const setMemoryNodeRef = (el, index) => {
@@ -127,12 +155,42 @@ const setCardNodeRef = (el, index) => {
     cardNodes.value[index] = el;
 };
 
+const memoryImageBoxClass = (index) => {
+    const orientation = imageOrientations.value[index];
+    if (orientation === 'portrait') {
+        return 'mx-auto h-44 w-[62%] sm:h-56 sm:w-[58%] md:h-72 md:w-[54%]';
+    }
+    return 'h-28 w-full sm:h-40 md:h-52';
+};
+
+const onMemoryImageLoad = (event, index) => {
+    const target = event?.target;
+    if (!(target instanceof HTMLImageElement)) return;
+    imageOrientations.value[index] =
+        target.naturalHeight > target.naturalWidth ? 'portrait' : 'landscape';
+};
+
+const detectAllImageOrientations = () => {
+    imageOrientations.value = props.memories.map(() => 'landscape');
+
+    props.memories.forEach((memory, index) => {
+        if (!memory?.image || typeof window === 'undefined') return;
+        const img = new Image();
+        img.onload = () => {
+            imageOrientations.value[index] =
+                img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape';
+        };
+        img.src = memory.image;
+    });
+};
+
 const resetRefCollections = () => {
     memoryNodes.value = [];
     outerDots.value = [];
     innerDots.value = [];
     imageNodes.value = [];
     cardNodes.value = [];
+    imageOrientations.value = [];
 };
 
 const calculateNodeLengths = (pathElement, allPoints) => {
@@ -260,20 +318,30 @@ const setupGsapAnimations = async () => {
     }, sectionRef.value);
 };
 
+const syncViewportWidth = () => {
+    if (typeof window === 'undefined') return;
+    viewportWidth.value = window.innerWidth;
+};
+
 watch(
     () => props.memories.length,
     () => {
         resetRefCollections();
+        detectAllImageOrientations();
         setupGsapAnimations();
     },
     { immediate: true },
 );
 
 onMounted(() => {
+    syncViewportWidth();
+    window.addEventListener('resize', syncViewportWidth);
+    detectAllImageOrientations();
     setupGsapAnimations();
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener('resize', syncViewportWidth);
     gsapContext?.revert();
 });
 </script>
@@ -281,9 +349,9 @@ onBeforeUnmount(() => {
 <template>
     <section
         ref="sectionRef"
-        class="relative overflow-hidden bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
+        class="relative min-h-screen bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
     >
-        <div class="mx-auto max-w-6xl">
+        <div class="no-scrollbar mx-auto max-w-6xl">
             <div class="mb-10 text-center md:mb-14">
                 <p class="text-sm tracking-[0.24em] text-rose-500 uppercase">
                     Our Milestones
@@ -300,7 +368,7 @@ onBeforeUnmount(() => {
                 :style="{ minHeight: `${totalHeight}px` }"
             >
                 <svg
-                    class="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
+                    class="pointer-events-none absolute inset-0 z-0 h-full w-full"
                     :viewBox="svgViewBox"
                     preserveAspectRatio="none"
                     aria-hidden="true"
@@ -323,8 +391,8 @@ onBeforeUnmount(() => {
                         fill="none"
                         stroke="#ec4899"
                         stroke-linecap="round"
-                        stroke-width="5"
-                        stroke-dasharray="1.5 14"
+                        stroke-width="4"
+                        stroke-dasharray="2 14"
                         :mask="`url(#${ROADMAP_MASK_ID})`"
                         class="romantic-dotted"
                     />
@@ -332,10 +400,10 @@ onBeforeUnmount(() => {
                         v-for="(point, index) in points"
                         :key="`dot-${index}`"
                         :ref="(el) => setOuterDotRef(el, index)"
-                        :x="point.x - 8"
-                        :y="point.y - 8"
-                        width="16"
-                        height="16"
+                        :x="point.x - 6"
+                        :y="point.y - 6"
+                        width="10"
+                        height="10"
                         rx="3"
                         fill="#f472b6"
                         fill-opacity="0.2"
@@ -344,8 +412,8 @@ onBeforeUnmount(() => {
                         v-for="(point, index) in points"
                         :key="`dot-inner-${index}`"
                         :ref="(el) => setInnerDotRef(el, index)"
-                        :x="point.x - 3"
-                        :y="point.y - 3"
+                        :x="point.x - 2"
+                        :y="point.y - 2"
                         width="6"
                         height="6"
                         rx="1"
@@ -353,57 +421,76 @@ onBeforeUnmount(() => {
                     />
                 </svg>
 
-                <div
-                    class="pointer-events-none absolute top-0 bottom-0 left-6 w-px border-l-2 border-dashed border-rose-300 md:hidden"
-                />
-
                 <article
                     v-for="(memory, index) in memories"
                     :key="`${memory.title}-${memory.date}-${index}`"
                     :ref="(el) => setMemoryNodeRef(el, index)"
-                    class="memory-node absolute right-0 left-0"
+                    class="memory-node absolute right-0 left-0 z-10 px-2 sm:px-4 md:px-8"
                     :style="nodeStyle(index)"
                 >
                     <div
-                        class="grid items-center gap-6 md:grid-cols-2 md:gap-20"
+                        class="flex"
+                        :class="
+                            index % 2 === 0 ? 'justify-start' : 'justify-end'
+                        "
                     >
-                        <div
-                            :ref="(el) => setImageNodeRef(el, index)"
-                            class="relative pl-8 md:pl-0"
-                            :class="
-                                index % 2 === 0 ? 'md:order-1' : 'md:order-2'
-                            "
-                        >
+                        <div class="w-[88%] sm:w-[84%] md:w-[72%]">
                             <div
-                                class="absolute top-8 left-2 size-3 rounded-full bg-rose-400 shadow-[0_0_0_7px_rgba(251,207,232,0.65)] md:hidden"
-                            />
-                            <img
-                                :src="memory.image"
-                                :alt="memory.title"
-                                class="h-44 w-full rounded-3xl border-2 border-rose-100 object-cover shadow-[0_14px_34px_rgba(244,114,182,0.28)] sm:h-52"
-                            />
-                        </div>
+                                class="flex items-start gap-4 sm:gap-8 md:gap-20"
+                            >
+                                <div
+                                    :ref="(el) => setImageNodeRef(el, index)"
+                                    class="relative w-1/2 shrink-0"
+                                    :class="
+                                        index % 2 === 0 ? 'order-1' : 'order-2'
+                                    "
+                                >
+                                    <div
+                                        class="relative isolate transition-all duration-300"
+                                        :class="memoryImageBoxClass(index)"
+                                    >
+                                        <img
+                                            :src="memory.image"
+                                            :alt="memory.title"
+                                            class="h-full w-full rounded-2xl object-cover shadow-[0_8px_18px_rgba(219,39,119,0.25)]"
+                                            @load="
+                                                onMemoryImageLoad($event, index)
+                                            "
+                                        />
+                                    </div>
+                                </div>
 
-                        <div
-                            :ref="(el) => setCardNodeRef(el, index)"
-                            class="rounded-3xl border border-rose-100 bg-white/80 p-6 shadow-[0_18px_38px_rgba(251,113,133,0.18)] backdrop-blur-sm md:p-7"
-                            :class="
-                                index % 2 === 0 ? 'md:order-2' : 'md:order-1'
-                            "
-                        >
-                            <p
-                                class="text-xs font-semibold tracking-[0.2em] text-rose-500 uppercase"
-                            >
-                                {{ memory.date }}
-                            </p>
-                            <h3
-                                class="mt-2 font-['Playfair_Display'] text-2xl text-rose-800"
-                            >
-                                {{ memory.title }}
-                            </h3>
-                            <p class="mt-3 leading-relaxed text-rose-700/90">
-                                {{ memory.description }}
-                            </p>
+                                <div
+                                    :ref="(el) => setCardNodeRef(el, index)"
+                                    class="w-1/2 rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_18px_38px_rgba(251,113,133,0.18)] backdrop-blur-sm sm:p-5 md:rounded-3xl md:p-7"
+                                    :class="
+                                        index % 2 === 0 ? 'order-2' : 'order-1'
+                                    "
+                                >
+                                    <span class="rose-corner rose-corner-card">
+                                        <img
+                                            src="/image/pink-rose.png"
+                                            alt=""
+                                            class="rose-corner-icon"
+                                        />
+                                    </span>
+                                    <p
+                                        class="text-[10px] font-semibold tracking-[0.14em] text-rose-500 uppercase sm:text-xs sm:tracking-[0.2em]"
+                                    >
+                                        {{ memory.date }}
+                                    </p>
+                                    <h3
+                                        class="mt-1 font-['Playfair_Display'] text-base text-rose-800 sm:mt-2 sm:text-xl md:text-2xl"
+                                    >
+                                        {{ memory.title }}
+                                    </h3>
+                                    <p
+                                        class="mt-1 text-xs leading-relaxed text-rose-700/90 sm:mt-2 sm:text-sm md:mt-3 md:text-base"
+                                    >
+                                        {{ memory.description }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </article>
@@ -419,5 +506,38 @@ onBeforeUnmount(() => {
 
 .romantic-dotted {
     filter: drop-shadow(0 0 10px rgba(244, 114, 182, 0.25));
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.rose-corner {
+    position: absolute;
+    left: -1.5rem;
+    bottom: -1rem;
+    z-index: 20;
+    display: inline-flex;
+    padding: 0.22rem;
+}
+
+.rose-corner-icon {
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+    display: block;
+}
+
+.rose-corner-image .rose-corner-icon {
+    filter: hue-rotate(-8deg) saturate(1.12);
+}
+
+.rose-corner-card .rose-corner-icon {
+    filter: hue-rotate(8deg) saturate(1.22);
 }
 </style>
