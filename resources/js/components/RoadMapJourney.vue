@@ -58,7 +58,6 @@ const pathRef = ref(null);
 const viewportWidth = ref(1280);
 const memoryNodes = ref([]);
 const outerDots = ref([]);
-const innerDots = ref([]);
 const imageNodes = ref([]);
 const cardNodes = ref([]);
 const imageOrientations = ref([]);
@@ -80,6 +79,27 @@ const imageHeight = computed(() => {
     if (viewportWidth.value < 640) return 112;
     if (viewportWidth.value < 768) return 160;
     return 208;
+});
+
+const roseNodeSize = computed(() => {
+    if (viewportWidth.value < 640) return 54;
+    if (viewportWidth.value < 768) return 48;
+    return 42;
+});
+
+const roseNodeX = (point) => point.x - roseNodeSize.value / 2;
+const roseNodeY = (point) => point.y - roseNodeSize.value * 0.48;
+
+const roadmapStrokeWidth = computed(() => {
+    if (viewportWidth.value < 640) return 5;
+    if (viewportWidth.value < 768) return 4.5;
+    return 4;
+});
+
+const roadmapDashArray = computed(() => {
+    if (viewportWidth.value < 640) return '3 12';
+    if (viewportWidth.value < 768) return '2.5 13';
+    return '2 14';
 });
 
 const lastNodeTop = computed(() => {
@@ -140,11 +160,6 @@ const setOuterDotRef = (el, index) => {
     outerDots.value[index] = el;
 };
 
-const setInnerDotRef = (el, index) => {
-    if (!el) return;
-    innerDots.value[index] = el;
-};
-
 const setImageNodeRef = (el, index) => {
     if (!el) return;
     imageNodes.value[index] = el;
@@ -187,7 +202,6 @@ const detectAllImageOrientations = () => {
 const resetRefCollections = () => {
     memoryNodes.value = [];
     outerDots.value = [];
-    innerDots.value = [];
     imageNodes.value = [];
     cardNodes.value = [];
     imageOrientations.value = [];
@@ -247,11 +261,6 @@ const setupGsapAnimations = async () => {
             scale: 0.35,
             transformOrigin: 'center center',
         });
-        gsap.set(innerDots.value, {
-            autoAlpha: 0,
-            scale: 0.2,
-            transformOrigin: 'center center',
-        });
 
         gsap.set(imageNodes.value, {
             autoAlpha: 0,
@@ -265,7 +274,7 @@ const setupGsapAnimations = async () => {
         ScrollTrigger.create({
             trigger: sectionRef.value,
             start: 'top 78%',
-            end: 'bottom 20%',
+            end: 'bottom 42%',
             scrub: true,
             onUpdate: (self) => {
                 maxProgress = Math.max(maxProgress, self.progress);
@@ -281,13 +290,6 @@ const setupGsapAnimations = async () => {
                         autoAlpha: 1,
                         scale: 1,
                         duration: 0.22,
-                        ease: 'power2.out',
-                        overwrite: 'auto',
-                    });
-                    gsap.to(innerDots.value[index], {
-                        autoAlpha: 1,
-                        scale: 1,
-                        duration: 0.2,
                         ease: 'power2.out',
                         overwrite: 'auto',
                     });
@@ -320,7 +322,7 @@ const setupGsapAnimations = async () => {
 
 const syncViewportWidth = () => {
     if (typeof window === 'undefined') return;
-    viewportWidth.value = window.innerWidth;
+    viewportWidth.value = sectionRef.value?.clientWidth || window.innerWidth;
 };
 
 watch(
@@ -391,33 +393,22 @@ onBeforeUnmount(() => {
                         fill="none"
                         stroke="#ec4899"
                         stroke-linecap="round"
-                        stroke-width="4"
-                        stroke-dasharray="2 14"
+                        :stroke-width="roadmapStrokeWidth"
+                        :stroke-dasharray="roadmapDashArray"
                         :mask="`url(#${ROADMAP_MASK_ID})`"
                         class="romantic-dotted"
                     />
-                    <rect
+                    <image
                         v-for="(point, index) in points"
-                        :key="`dot-${index}`"
+                        :key="`rose-node-${index}`"
                         :ref="(el) => setOuterDotRef(el, index)"
-                        :x="point.x - 6"
-                        :y="point.y - 6"
-                        width="10"
-                        height="10"
-                        rx="3"
-                        fill="#f472b6"
-                        fill-opacity="0.2"
-                    />
-                    <rect
-                        v-for="(point, index) in points"
-                        :key="`dot-inner-${index}`"
-                        :ref="(el) => setInnerDotRef(el, index)"
-                        :x="point.x - 2"
-                        :y="point.y - 2"
-                        width="6"
-                        height="6"
-                        rx="1"
-                        fill="#ec4899"
+                        href="/image/pink-rose.png"
+                        :x="roseNodeX(point)"
+                        :y="roseNodeY(point)"
+                        :width="roseNodeSize"
+                        :height="roseNodeSize"
+                        preserveAspectRatio="xMidYMid meet"
+                        class="rose-node-icon"
                     />
                 </svg>
 
@@ -508,6 +499,11 @@ onBeforeUnmount(() => {
     filter: drop-shadow(0 0 10px rgba(244, 114, 182, 0.25));
 }
 
+.rose-node-icon {
+    filter: drop-shadow(0 3px 6px rgba(236, 72, 153, 0.35))
+        saturate(1.1);
+}
+
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -520,7 +516,7 @@ onBeforeUnmount(() => {
 .rose-corner {
     position: absolute;
     left: -1.5rem;
-    bottom: -1rem;
+    top: -1rem;
     z-index: 20;
     display: inline-flex;
     padding: 0.22rem;

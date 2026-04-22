@@ -238,12 +238,12 @@ onBeforeUnmount(() => {
         <div class="w-full">
             <div class="mb-8 text-center md:mb-12">
                 <p class="text-sm tracking-[0.22em] text-rose-500 uppercase">
-                    Love Notes
+                    Notes of Love
                 </p>
                 <h2
                     class="mt-2 font-['Playfair_Display'] text-4xl text-rose-800 sm:text-5xl"
                 >
-                    Feedback Wall
+                    Whispering Wishes
                 </h2>
             </div>
 
@@ -254,13 +254,13 @@ onBeforeUnmount(() => {
             >
                 <div
                     ref="trackRef"
-                    class="flex w-max gap-10 will-change-transform md:gap-20"
+                    class="flex w-max gap-10 py-10 will-change-transform md:gap-20"
                 >
                     <article
                         v-for="(feedback, index) in repeatedFeedbacks"
                         :key="`${feedback.name}-${index}`"
                         :ref="(el) => setCardRef(el, index)"
-                        class="wavy-card group relative min-h-[240px] max-w-[420px] min-w-[340px] cursor-grab border-2 border-rose-200/80 bg-linear-to-br from-white via-rose-50 to-pink-100 p-7 shadow-[0_18px_38px_rgba(244,114,182,0.24)] ring-2 ring-white/60 active:cursor-grabbing md:min-h-[280px] md:min-w-[420px] md:p-9"
+                        class="wavy-card group relative min-h-[240px] w-[82vw] max-w-[420px] min-w-[240px] cursor-grab border-2 border-rose-200/80 bg-linear-to-br from-white via-rose-50 to-pink-100 p-6 shadow-[0_18px_38px_rgba(244,114,182,0.24)] ring-2 ring-white/60 active:cursor-grabbing sm:w-[68vw] sm:p-7 md:min-h-[280px] md:w-[48vw] md:min-w-[360px] md:p-9 lg:w-[420px]"
                         :class="[
                             feedback.tone || 'bg-rose-100',
                             { 'wavy-card-alt': index % 2 === 1 },

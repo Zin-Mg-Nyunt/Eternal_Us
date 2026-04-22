@@ -46,9 +46,9 @@ const petals = Array.from({ length: 16 }, (_, index) => ({
     left: `${Math.random() * 100}%`,
     delay: `${Math.random() * 8}s`,
     duration: `${9 + Math.random() * 9}s`,
-    size: `${10 + Math.random() * 16}px`,
+    size: `${26 + Math.random() * 24}px`,
     drift: `${(Math.random() * 80 - 40).toFixed(2)}px`,
-    opacity: (0.35 + Math.random() * 0.45).toFixed(2),
+    opacity: (0.72 + Math.random() * 0.28).toFixed(2),
 }));
 
 let intervalId;
@@ -68,29 +68,56 @@ onBeforeUnmount(() => {
     <section
         class="relative min-h-screen overflow-hidden bg-rose-50 text-white"
     >
-        <div
-            class="absolute inset-0 bg-cover bg-center"
-            style="background-image: url('./image/hero.jpg')"
-        />
-        <div
-            class="absolute inset-0 bg-linear-to-br from-white/55 via-rose-100/40 to-rose-200/45"
-        />
+        <svg class="absolute h-0 w-0" aria-hidden="true" focusable="false">
+            <defs>
+                <clipPath
+                    id="hero-wave-clip-desktop"
+                    clipPathUnits="objectBoundingBox"
+                >
+                    <path
+                        d="M0,0 L1,0 L1,0.78 C0.95,0.84 0.9,0.9 0.84,0.86 C0.78,0.82 0.72,0.74 0.66,0.78 C0.6,0.82 0.54,0.9 0.48,0.84 C0.42,0.78 0.36,0.7 0.3,0.76 C0.24,0.82 0.18,0.92 0.12,0.86 C0.06,0.8 0.03,0.74 0,0.8 Z"
+                    />
+                </clipPath>
+                <clipPath
+                    id="hero-wave-clip-mobile"
+                    clipPathUnits="objectBoundingBox"
+                >
+                    <path
+                        d="M0,0 L1,0 L1,0.9 C0.84,0.94 0.68,0.86 0.52,0.88 C0.36,0.9 0.2,0.96 0,0.91 Z"
+                    />
+                </clipPath>
+            </defs>
+        </svg>
 
-        <div class="pointer-events-none absolute inset-0">
-            <span
-                v-for="petal in petals"
-                :key="petal.id"
-                class="rose-petal"
-                :style="{
-                    left: petal.left,
-                    animationDelay: petal.delay,
-                    animationDuration: petal.duration,
-                    width: petal.size,
-                    height: petal.size,
-                    '--drift': petal.drift,
-                    opacity: petal.opacity,
-                }"
+        <div
+            class="hero-wave-clip absolute inset-x-0 top-0 -bottom-4 md:-bottom-32"
+        >
+            <div
+                class="absolute inset-0 bg-cover bg-center"
+                style="background-image: url('./image/hero.jpg')"
             />
+            <div
+                class="absolute inset-0 bg-linear-to-br from-white/55 via-rose-100/40 to-rose-200/45"
+            />
+
+            <div class="pointer-events-none absolute inset-0 z-2">
+                <img
+                    v-for="petal in petals"
+                    :key="petal.id"
+                    src="/image/pink_rose_petal.png"
+                    alt="pink rose petal"
+                    class="rose-petal object-contain"
+                    :style="{
+                        left: petal.left,
+                        animationDelay: petal.delay,
+                        animationDuration: petal.duration,
+                        width: petal.size,
+                        height: petal.size,
+                        '--drift': petal.drift,
+                        opacity: petal.opacity,
+                    }"
+                />
+            </div>
         </div>
 
         <div
@@ -172,15 +199,20 @@ onBeforeUnmount(() => {
 .rose-petal {
     position: absolute;
     top: -10%;
-    border-radius: 50% 50% 50% 10%;
-    background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.96) 0%,
-        rgba(255, 205, 225, 0.92) 42%,
-        rgba(255, 158, 190, 0.85) 100%
-    );
     animation: petal-fall linear infinite;
-    filter: drop-shadow(0 3px 8px rgba(255, 163, 198, 0.38));
+    filter: drop-shadow(0 6px 10px rgba(236, 72, 153, 0.38));
+}
+
+.hero-wave-clip {
+    clip-path: url(#hero-wave-clip-desktop);
+    -webkit-clip-path: url(#hero-wave-clip-desktop);
+}
+
+@media (max-width: 767px) {
+    .hero-wave-clip {
+        clip-path: url(#hero-wave-clip-mobile);
+        -webkit-clip-path: url(#hero-wave-clip-mobile);
+    }
 }
 
 @keyframes petal-fall {

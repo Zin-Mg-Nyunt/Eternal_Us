@@ -1,4 +1,6 @@
 <script setup>
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
 const props = defineProps({
     images: {
         type: Array,
@@ -60,6 +62,67 @@ const props = defineProps({
         ],
     },
 });
+
+const imageCardRefs = ref([]);
+const visibleCards = ref([]);
+let cardObserver = null;
+
+const setImageCardRef = (el, index) => {
+    if (!el) return;
+    imageCardRefs.value[index] = el;
+};
+
+const resetVisibleCards = () => {
+    visibleCards.value = props.images.map(() => false);
+};
+
+const observeCards = async () => {
+    await nextTick();
+    cardObserver?.disconnect();
+
+    const canObserve =
+        typeof window !== 'undefined' &&
+        typeof IntersectionObserver !== 'undefined';
+    if (!canObserve) {
+        visibleCards.value = props.images.map(() => true);
+        return;
+    }
+
+    cardObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                const index = Number(entry.target.dataset.cardIndex);
+                if (!Number.isNaN(index)) visibleCards.value[index] = true;
+                cardObserver?.unobserve(entry.target);
+            });
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    imageCardRefs.value.forEach((el) => {
+        if (el) cardObserver?.observe(el);
+    });
+};
+
+watch(
+    () => props.images.length,
+    async () => {
+        imageCardRefs.value = [];
+        resetVisibleCards();
+        await observeCards();
+    },
+    { immediate: true },
+);
+
+onMounted(async () => {
+    resetVisibleCards();
+    await observeCards();
+});
+
+onBeforeUnmount(() => {
+    cardObserver?.disconnect();
+});
 </script>
 
 <template>
@@ -80,7 +143,15 @@ const props = defineProps({
                 <article
                     v-for="(image, index) in images"
                     :key="image.src ?? `gallery-${index}`"
-                    class="group relative mb-4 break-inside-avoid md:mb-5"
+                    :ref="(el) => setImageCardRef(el, index)"
+                    :data-card-index="index"
+                    class="group relative mb-4 break-inside-avoid transition-all duration-700 ease-out md:mb-5"
+                    :class="
+                        visibleCards[index]
+                            ? 'translate-y-0 opacity-100'
+                            : 'translate-y-6 opacity-0'
+                    "
+                    :style="{ transitionDelay: `${(index % 4) * 90}ms` }"
                 >
                     <img
                         :src="image.src"
