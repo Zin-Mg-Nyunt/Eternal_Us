@@ -6,56 +6,56 @@ const props = defineProps({
         type: Array,
         default: () => [
             {
-                src: './image/hero.jpg',
+                src: './image/hero.webp',
                 alt: 'A sweet date memory',
                 showSticker: true,
             },
             {
-                src: './image/two.jpg',
+                src: './image/two.webp',
                 alt: 'Holding hands under evening sky',
             },
             {
-                src: './image/hero.jpg',
+                src: './image/hero.webp',
                 alt: 'A cozy coffee shop moment',
                 showSticker: true,
             },
             {
-                src: './image/four.jpg',
+                src: './image/four.webp',
                 alt: 'Laughter and sunshine together',
             },
             {
-                src: './image/one.jpg',
+                src: './image/one.webp',
                 alt: 'Travel memory we cherish',
                 showSticker: true,
             },
             {
-                src: './image/three.jpg',
+                src: './image/three.webp',
                 alt: 'A peaceful walk side by side',
             },
             {
-                src: './image/two.jpg',
+                src: './image/two.webp',
                 alt: 'Festival lights and warm smiles',
             },
             {
-                src: './image/hero.jpg',
+                src: './image/hero.webp',
                 alt: 'Our favorite little adventure',
                 showSticker: true,
             },
             {
-                src: './image/four.jpg',
+                src: './image/four.webp',
                 alt: 'Golden hour by the riverside',
             },
             {
-                src: './image/two.jpg',
+                src: './image/two.webp',
                 alt: 'A candid smile we love forever',
                 showSticker: true,
             },
             {
-                src: './image/one.jpg',
+                src: './image/one.webp',
                 alt: 'Late night city lights and dreams',
             },
             {
-                src: './image/three.jpg',
+                src: './image/three.webp',
                 alt: 'Sunday picnic in our favorite park',
                 showSticker: true,
             },

@@ -299,6 +299,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.feedback-wall {
+    contain: layout;
+}
+
 .wavy-card {
     border-radius: 1.75rem 2rem 1.6rem 1.9rem / 1.8rem 1.6rem 2rem 1.7rem;
 }

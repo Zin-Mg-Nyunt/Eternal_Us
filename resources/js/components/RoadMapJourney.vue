@@ -15,28 +15,28 @@ const props = defineProps({
         type: Array,
         default: () => [
             {
-                image: '/image/hero.jpg',
+                image: '/image/hero.webp',
                 date: 'Aug 29, 2020',
                 title: 'The First Hello',
                 description:
                     'The day our story began, with shy smiles and a feeling that this moment would stay forever.',
             },
             {
-                image: '/image/one.jpg',
+                image: '/image/one.webp',
                 date: 'Feb 14, 2021',
                 title: 'Our Sweet Promise',
                 description:
                     'A warm evening, pink skies, and a promise to keep choosing each other every single day.',
             },
             {
-                image: '/image/hero.jpg',
+                image: '/image/hero.webp',
                 date: 'Dec 25, 2022',
                 title: 'Holiday Memory',
                 description:
                     'Wrapped in winter lights, we made simple memories that still make our hearts glow.',
             },
             {
-                image: '/image/two.jpg',
+                image: '/image/two.webp',
                 date: 'Today',
                 title: 'Still Growing Together',
                 description:
@@ -500,8 +500,7 @@ onBeforeUnmount(() => {
 }
 
 .rose-node-icon {
-    filter: drop-shadow(0 3px 6px rgba(236, 72, 153, 0.35))
-        saturate(1.1);
+    filter: drop-shadow(0 3px 6px rgba(236, 72, 153, 0.35)) saturate(1.1);
 }
 
 .no-scrollbar {

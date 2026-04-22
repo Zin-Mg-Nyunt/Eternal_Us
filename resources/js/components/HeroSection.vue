@@ -92,9 +92,13 @@ onBeforeUnmount(() => {
         <div
             class="hero-wave-clip absolute inset-x-0 top-0 -bottom-4 md:-bottom-32"
         >
-            <div
-                class="absolute inset-0 bg-cover bg-center"
-                style="background-image: url('./image/hero.jpg')"
+            <img
+                src="/image/hero.webp"
+                alt=""
+                class="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
             />
             <div
                 class="absolute inset-0 bg-linear-to-br from-white/55 via-rose-100/40 to-rose-200/45"

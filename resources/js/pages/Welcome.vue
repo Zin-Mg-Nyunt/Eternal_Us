@@ -4,6 +4,7 @@ import RoadMapJourney from '@/components/RoadMapJourney.vue';
 import Gallery from '@/components/Gallery.vue';
 import FeedbackWall from '@/components/FeedbackWall.vue';
 import FeedbackForm from '@/components/FeedbackForm.vue';
+import FloatingRoseFab from '@/components/FloatingRoseFab.vue';
 </script>
 
 <template>
@@ -12,4 +13,5 @@ import FeedbackForm from '@/components/FeedbackForm.vue';
     <Gallery />
     <FeedbackWall />
     <FeedbackForm />
+    <FloatingRoseFab />
 </template>
