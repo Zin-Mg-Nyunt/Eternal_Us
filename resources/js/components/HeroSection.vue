@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
                 </p>
 
                 <h1
-                    class="font-romantic text-5xl leading-tight text-rose-900 drop-shadow-sm sm:text-6xl lg:text-7xl"
+                    class="font-['Great_Vibes'] text-5xl leading-tight font-normal text-rose-900 drop-shadow-sm sm:text-6xl lg:text-7xl"
                 >
                     Eternal Us
                 </h1>
@@ -169,11 +169,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Great+Vibes&display=swap');
-
-.font-romantic {
-    font-family: 'Great Vibes', 'Playfair Display', serif;
-}
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
 .timer-card {
     border-radius: 1rem;

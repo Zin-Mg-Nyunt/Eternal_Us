@@ -308,9 +308,7 @@ onBeforeUnmount(() => {
                 <p class="text-sm tracking-[0.22em] text-rose-500 uppercase">
                     A Petal for Your Thoughts
                 </p>
-                <h2
-                    class="mt-2 font-['Playfair_Display'] text-4xl text-rose-800 sm:text-5xl"
-                >
+                <h2 class="font-title mt-2 text-4xl text-rose-800 sm:text-5xl">
                     Sign Our Love Story
                 </h2>
             </div>
@@ -431,8 +429,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
-
 /* Soft, cute love-note style card */
 .love-card {
     background:

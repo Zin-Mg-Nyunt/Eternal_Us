@@ -358,9 +358,7 @@ onBeforeUnmount(() => {
                 <p class="text-sm tracking-[0.24em] text-rose-500 uppercase">
                     Our Milestones
                 </p>
-                <h2
-                    class="mt-3 font-['Playfair_Display'] text-4xl text-rose-800 sm:text-5xl"
-                >
+                <h2 class="font-title mt-3 text-4xl text-rose-800 sm:text-5xl">
                     Roadmap Journey
                 </h2>
             </div>
@@ -471,7 +469,7 @@ onBeforeUnmount(() => {
                                         {{ memory.date }}
                                     </p>
                                     <h3
-                                        class="mt-1 font-['Playfair_Display'] text-base text-rose-800 sm:mt-2 sm:text-xl md:text-2xl"
+                                        class="font-title mt-1 text-base text-rose-800 sm:mt-2 sm:text-xl md:text-2xl"
                                     >
                                         {{ memory.title }}
                                     </h3>

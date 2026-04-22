@@ -131,7 +131,9 @@ onBeforeUnmount(() => {
                     stroke="currentColor"
                     stroke-width="1.8"
                 >
-                    <path d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12" />
+                    <path
+                        d="M4 20h4l10.5-10.5a1.4 1.4 0 000-2L16.5 5.5a1.4 1.4 0 00-2 0L4 16v4zM13.5 7.5l3 3"
+                    />
                 </svg>
             </button>
             <span
