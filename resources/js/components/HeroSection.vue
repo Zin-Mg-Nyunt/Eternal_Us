@@ -1,6 +1,13 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
+const props = defineProps({
+    coverImage: {
+        type: String,
+        default: null,
+    },
+});
+
 const relationshipStartedAt = '2020-08-29T23:48:00';
 const startDate = new Date(relationshipStartedAt);
 const now = ref(new Date());
@@ -93,7 +100,8 @@ onBeforeUnmount(() => {
             class="hero-wave-clip hero-wave-layer absolute inset-x-0 top-0 bottom-0"
         >
             <img
-                src="/image/hero.webp"
+                v-if="props.coverImage"
+                :src="props.coverImage"
                 alt=""
                 class="absolute inset-0 h-full w-full object-cover"
                 loading="eager"

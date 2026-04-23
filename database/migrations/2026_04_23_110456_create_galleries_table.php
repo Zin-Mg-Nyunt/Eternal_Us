@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('galleries', function (Blueprint $table) {
             $table->id();
-            $table->text('image_url');
-            $table->string('alt')->nullable();
+            $table->string('image_url');
             $table->timestamps();
         });
     }

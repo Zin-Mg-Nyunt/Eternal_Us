@@ -13,36 +13,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 const props = defineProps({
     memories: {
         type: Array,
-        default: () => [
-            {
-                image: '/image/hero.webp',
-                date: 'Aug 29, 2020',
-                title: 'The First Hello',
-                description:
-                    'The day our story began, with shy smiles and a feeling that this moment would stay forever.',
-            },
-            {
-                image: '/image/one.webp',
-                date: 'Feb 14, 2021',
-                title: 'Our Sweet Promise',
-                description:
-                    'A warm evening, pink skies, and a promise to keep choosing each other every single day.',
-            },
-            {
-                image: '/image/hero.webp',
-                date: 'Dec 25, 2022',
-                title: 'Holiday Memory',
-                description:
-                    'Wrapped in winter lights, we made simple memories that still make our hearts glow.',
-            },
-            {
-                image: '/image/two.webp',
-                date: 'Today',
-                title: 'Still Growing Together',
-                description:
-                    'Every day adds another little chapter to our forever, and this roadmap keeps them close.',
-            },
-        ],
+        default: () => [],
     },
 });
 
@@ -51,17 +22,20 @@ const TOP_OFFSET = 120;
 const NODE_MID_OFFSET = 78;
 const LEFT_X = 385;
 const RIGHT_X = 615;
+const VIEWBOX_WIDTH = 1000;
 
 const ROADMAP_MASK_ID = 'roadmap-path-reveal-mask';
 const sectionRef = ref(null);
 const pathRef = ref(null);
 const viewportWidth = ref(1280);
 const memoryNodes = ref([]);
+const nodeHeights = ref([]);
 const outerDots = ref([]);
 const imageNodes = ref([]);
 const cardNodes = ref([]);
 const imageOrientations = ref([]);
 let gsapContext = null;
+let relayoutTimer = null;
 
 const rowHeight = computed(() => {
     if (viewportWidth.value < 640) return 230;
@@ -102,24 +76,77 @@ const roadmapDashArray = computed(() => {
     return '2 14';
 });
 
-const lastNodeTop = computed(() => {
-    if (!props.memories.length) return TOP_OFFSET;
-    return TOP_OFFSET + (props.memories.length - 1) * rowHeight.value;
+const nodeXPair = computed(() => {
+    if (viewportWidth.value < 640) {
+        return {
+            left: VIEWBOX_WIDTH * 0.44,
+            right: VIEWBOX_WIDTH * 0.56,
+        };
+    }
+    if (viewportWidth.value < 768) {
+        return {
+            left: VIEWBOX_WIDTH * 0.42,
+            right: VIEWBOX_WIDTH * 0.58,
+        };
+    }
+
+    return {
+        left: LEFT_X,
+        right: RIGHT_X,
+    };
 });
 
-const lineEndY = computed(() => lastNodeTop.value + imageHeight.value);
+const verticalGap = computed(() => {
+    if (viewportWidth.value < 640) return 34;
+    if (viewportWidth.value < 768) return 42;
+    return 56;
+});
+
+const estimatedNodeHeight = computed(() => {
+    if (viewportWidth.value < 640) return 236;
+    if (viewportWidth.value < 768) return 246;
+    return 248;
+});
+
+const nodeTopPositions = computed(() => {
+    if (!props.memories.length) return [];
+
+    const positions = [];
+    let nextTop = TOP_OFFSET;
+
+    props.memories.forEach((_, index) => {
+        positions.push(nextTop);
+        const currentHeight = nodeHeights.value[index] ?? estimatedNodeHeight.value;
+        nextTop += currentHeight + verticalGap.value;
+    });
+
+    return positions;
+});
 
 const totalHeight = computed(() => {
     if (!props.memories.length) return 420;
-    return lineEndY.value;
+    const lastIndex = props.memories.length - 1;
+    const lastTop = nodeTopPositions.value[lastIndex] ?? TOP_OFFSET;
+    const lastHeight = nodeHeights.value[lastIndex] ?? estimatedNodeHeight.value;
+    return lastTop + lastHeight + TOP_OFFSET;
 });
 
-const points = computed(() =>
-    props.memories.map((_, index) => ({
-        x: index % 2 === 0 ? LEFT_X : RIGHT_X,
-        y: TOP_OFFSET + index * rowHeight.value + nodeMidOffset.value,
-    })),
-);
+const points = computed(() => {
+    return props.memories.map((_, index) => {
+        const top = nodeTopPositions.value[index] ?? TOP_OFFSET;
+        const height = nodeHeights.value[index] ?? estimatedNodeHeight.value;
+        return {
+            x: index % 2 === 0 ? nodeXPair.value.left : nodeXPair.value.right,
+            y: top + height / 2,
+        };
+    });
+});
+
+const lineEndY = computed(() => {
+    if (!points.value.length) return TOP_OFFSET;
+    const lastPoint = points.value[points.value.length - 1];
+    return lastPoint.y + roseNodeSize.value * 0.66;
+});
 
 const curvePath = computed(() => {
     if (!points.value.length) return '';
@@ -147,7 +174,7 @@ const svgViewBox = computed(
 );
 
 const nodeStyle = (index) => ({
-    top: `${TOP_OFFSET + index * rowHeight.value}px`,
+    top: `${nodeTopPositions.value[index] ?? TOP_OFFSET}px`,
 });
 
 const setMemoryNodeRef = (el, index) => {
@@ -183,6 +210,7 @@ const onMemoryImageLoad = (event, index) => {
     if (!(target instanceof HTMLImageElement)) return;
     imageOrientations.value[index] =
         target.naturalHeight > target.naturalWidth ? 'portrait' : 'landscape';
+    scheduleRelayout();
 };
 
 const detectAllImageOrientations = () => {
@@ -194,17 +222,35 @@ const detectAllImageOrientations = () => {
         img.onload = () => {
             imageOrientations.value[index] =
                 img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape';
+            scheduleRelayout();
         };
         img.src = memory.image;
     });
 };
 
+const scheduleRelayout = () => {
+    if (typeof window === 'undefined') return;
+    window.clearTimeout(relayoutTimer);
+    relayoutTimer = window.setTimeout(async () => {
+        await syncNodeHeights();
+        setupGsapAnimations();
+    }, 80);
+};
+
 const resetRefCollections = () => {
     memoryNodes.value = [];
+    nodeHeights.value = [];
     outerDots.value = [];
     imageNodes.value = [];
     cardNodes.value = [];
     imageOrientations.value = [];
+};
+
+const syncNodeHeights = async () => {
+    await nextTick();
+    nodeHeights.value = props.memories.map(
+        (_, index) => memoryNodes.value[index]?.offsetHeight ?? estimatedNodeHeight.value,
+    );
 };
 
 const calculateNodeLengths = (pathElement, allPoints) => {
@@ -325,11 +371,18 @@ const syncViewportWidth = () => {
     viewportWidth.value = sectionRef.value?.clientWidth || window.innerWidth;
 };
 
+const onResize = async () => {
+    syncViewportWidth();
+    await syncNodeHeights();
+    setupGsapAnimations();
+};
+
 watch(
     () => props.memories.length,
-    () => {
+    async () => {
         resetRefCollections();
         detectAllImageOrientations();
+        await syncNodeHeights();
         setupGsapAnimations();
     },
     { immediate: true },
@@ -337,13 +390,16 @@ watch(
 
 onMounted(() => {
     syncViewportWidth();
-    window.addEventListener('resize', syncViewportWidth);
+    window.addEventListener('resize', onResize);
     detectAllImageOrientations();
-    setupGsapAnimations();
+    syncNodeHeights().then(setupGsapAnimations);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', syncViewportWidth);
+    window.removeEventListener('resize', onResize);
+    if (typeof window !== 'undefined') {
+        window.clearTimeout(relayoutTimer);
+    }
     gsapContext?.revert();
 });
 </script>
@@ -359,7 +415,7 @@ onBeforeUnmount(() => {
                     Our Milestones
                 </p>
                 <h2 class="font-title mt-3 text-4xl text-rose-800 sm:text-5xl">
-                    Roadmap Journey
+                    Love Journey
                 </h2>
             </div>
 
@@ -423,13 +479,13 @@ onBeforeUnmount(() => {
                             index % 2 === 0 ? 'justify-start' : 'justify-end'
                         "
                     >
-                        <div class="w-[88%] sm:w-[84%] md:w-[72%]">
+                        <div class="w-[88%] sm:w-[84%] md:w-[88%] lg:w-[72%]">
                             <div
-                                class="flex items-start gap-4 sm:gap-8 md:gap-20"
+                                class="flex items-start gap-4 sm:gap-8 md:gap-8 lg:gap-20"
                             >
                                 <div
                                     :ref="(el) => setImageNodeRef(el, index)"
-                                    class="relative w-1/2 shrink-0"
+                                    class="relative w-[42%] shrink-0 lg:w-1/2"
                                     :class="
                                         index % 2 === 0 ? 'order-1' : 'order-2'
                                     "
@@ -451,7 +507,7 @@ onBeforeUnmount(() => {
 
                                 <div
                                     :ref="(el) => setCardNodeRef(el, index)"
-                                    class="w-1/2 rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_18px_38px_rgba(251,113,133,0.18)] backdrop-blur-sm sm:p-5 md:rounded-3xl md:p-7"
+                                    class="w-[58%] rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_18px_38px_rgba(251,113,133,0.18)] backdrop-blur-sm sm:p-5 md:rounded-3xl md:p-6 lg:w-1/2 lg:p-7"
                                     :class="
                                         index % 2 === 0 ? 'order-2' : 'order-1'
                                     "
@@ -474,7 +530,7 @@ onBeforeUnmount(() => {
                                         {{ memory.title }}
                                     </h3>
                                     <p
-                                        class="mt-1 text-xs leading-relaxed text-rose-700/90 sm:mt-2 sm:text-sm md:mt-3 md:text-base"
+                                        class="memory-description mt-1 text-xs leading-relaxed text-rose-700/90 sm:mt-2 sm:text-sm md:mt-3 md:text-base"
                                     >
                                         {{ memory.description }}
                                     </p>
@@ -532,5 +588,13 @@ onBeforeUnmount(() => {
 
 .rose-corner-card .rose-corner-icon {
     filter: hue-rotate(8deg) saturate(1.22);
+}
+
+@media (max-width: 1024px) {
+    .memory-description {
+        max-height: 7rem;
+        overflow-y: auto;
+        padding-right: 0.2rem;
+    }
 }
 </style>

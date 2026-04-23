@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('covers', function (Blueprint $table) {
-            $table->id();
-            $table->boolean('singleton')->default(true)->unique();
-            $table->string('image_url');
-            $table->timestamps();
+        Schema::table('journeys', function (Blueprint $table) {
+            $table->date('journey_date')->nullable()->after('story');
         });
     }
 
@@ -24,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('covers');
+        Schema::table('journeys', function (Blueprint $table) {
+            $table->dropColumn('journey_date');
+        });
     }
 };
+

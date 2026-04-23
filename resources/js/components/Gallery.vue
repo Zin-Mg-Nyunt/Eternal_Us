@@ -4,56 +4,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 const props = defineProps({
     images: {
         type: Array,
-        default: () => [
-            {
-                src: './image/hero.webp',
-                alt: 'A sweet date memory',
-            },
-            {
-                src: './image/two.webp',
-                alt: 'Holding hands under evening sky',
-            },
-            {
-                src: './image/hero.webp',
-                alt: 'A cozy coffee shop moment',
-            },
-            {
-                src: './image/four.webp',
-                alt: 'Laughter and sunshine together',
-            },
-            {
-                src: './image/one.webp',
-                alt: 'Travel memory we cherish',
-            },
-            {
-                src: './image/three.webp',
-                alt: 'A peaceful walk side by side',
-            },
-            {
-                src: './image/two.webp',
-                alt: 'Festival lights and warm smiles',
-            },
-            {
-                src: './image/hero.webp',
-                alt: 'Our favorite little adventure',
-            },
-            {
-                src: './image/four.webp',
-                alt: 'Golden hour by the riverside',
-            },
-            {
-                src: './image/two.webp',
-                alt: 'A candid smile we love forever',
-            },
-            {
-                src: './image/one.webp',
-                alt: 'Late night city lights and dreams',
-            },
-            {
-                src: './image/three.webp',
-                alt: 'Sunday picnic in our favorite park',
-            },
-        ],
+        default: () => [],
     },
 });
 

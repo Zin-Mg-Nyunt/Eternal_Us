@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 const props = defineProps({
     modelValue: {
@@ -22,14 +23,19 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    errors: {
+        type: Object,
+        default: () => {},
+    },
 });
 
 const emit = defineEmits(['update:modelValue', 'submit', 'edit-item']);
 
-const form = reactive({
+const form = useForm({
     journeyFile: null,
     journeyTitle: '',
     journeyDescription: '',
+    journeyDate: '',
     galleryFile: null,
     coverFile: null,
 });
@@ -73,6 +79,7 @@ const resetPreviews = () => {
     revokePreview(journeyPreviewUrl.value);
     revokePreview(coverPreviewUrl.value);
     revokePreview(galleryPreview.value?.url);
+
     journeyPreviewUrl.value = null;
     coverPreviewUrl.value = null;
     galleryPreview.value = null;
@@ -83,6 +90,7 @@ const onJourneyFileChange = (event) => {
     revokePreview(journeyPreviewUrl.value);
     form.journeyFile = file ?? null;
     journeyPreviewUrl.value = file ? URL.createObjectURL(file) : null;
+    form.clearErrors('journeyFile');
 };
 
 const onGalleryFileChange = (event) => {
@@ -95,6 +103,7 @@ const onGalleryFileChange = (event) => {
               url: URL.createObjectURL(file),
           }
         : null;
+    form.clearErrors('galleryFile');
 };
 
 const onCoverFileChange = (event) => {
@@ -102,6 +111,43 @@ const onCoverFileChange = (event) => {
     revokePreview(coverPreviewUrl.value);
     form.coverFile = file ?? null;
     coverPreviewUrl.value = file ? URL.createObjectURL(file) : null;
+    form.clearErrors('coverFile');
+};
+
+const validateForm = () => {
+    form.clearErrors();
+
+    if (props.type === 'journey') {
+        if (!form.journeyFile && !journeyPreviewUrl.value) {
+            form.setError('journeyFile', 'Please choose a journey image.');
+        }
+        if (!form.journeyTitle.trim()) {
+            form.setError('journeyTitle', 'Journey title is required.');
+        }
+        if (!form.journeyDescription.trim()) {
+            form.setError(
+                'journeyDescription',
+                'Story / description is required.',
+            );
+        }
+        if (!form.journeyDate) {
+            form.setError('journeyDate', 'Journey date is required.');
+        }
+    }
+
+    if (
+        props.type === 'gallery' &&
+        !form.galleryFile &&
+        !galleryPreview.value
+    ) {
+        form.setError('galleryFile', 'Please choose a gallery photo.');
+    }
+
+    if (props.type === 'cover' && !form.coverFile && !coverPreviewUrl.value) {
+        form.setError('coverFile', 'Please choose a cover image.');
+    }
+
+    return Object.keys(form.errors).length === 0;
 };
 
 const onSubmit = () => {
@@ -112,29 +158,52 @@ const onSubmit = () => {
         return;
     }
 
+    if (!validateForm()) return;
+
     const payload = {
         type: props.type,
         id: props.initialData?.id ?? null,
         journeyFile: form.journeyFile,
         journeyTitle: form.journeyTitle,
         journeyDescription: form.journeyDescription,
+        journeyDate: form.journeyDate,
         galleryFile: form.galleryFile,
         coverFile: form.coverFile,
     };
 
     emit('submit', payload);
-    closeModal();
+};
+
+const normalizeBackendErrors = (incoming = {}) => {
+    const source = incoming ?? {};
+    const mapped = {};
+    const keyMap = {
+        title: 'journeyTitle',
+        story: 'journeyDescription',
+        image: 'journeyFile',
+        journey_title: 'journeyTitle',
+        journey_description: 'journeyDescription',
+        journey_date: 'journeyDate',
+        journey_file: 'journeyFile',
+        date: 'journeyDate',
+        gallery_file: 'galleryFile',
+        cover_file: 'coverFile',
+    };
+
+    Object.entries(source).forEach(([key, value]) => {
+        const targetKey = keyMap[key] ?? key;
+        mapped[targetKey] = Array.isArray(value) ? value[0] : value;
+    });
+
+    return mapped;
 };
 
 watch(
     () => props.modelValue,
     (open) => {
         if (open) return;
-        form.journeyFile = null;
-        form.journeyTitle = '';
-        form.journeyDescription = '';
-        form.galleryFile = null;
-        form.coverFile = null;
+        form.reset();
+        form.clearErrors();
         resetPreviews();
     },
 );
@@ -144,11 +213,19 @@ watch(
     ([open, type]) => {
         if (!open || !props.initialData) return;
         if (type === 'journey') {
+            form.clearErrors(
+                'journeyFile',
+                'journeyTitle',
+                'journeyDescription',
+                'journeyDate',
+            );
             form.journeyTitle = props.initialData.title ?? '';
             form.journeyDescription = props.initialData.story ?? '';
+            form.journeyDate = props.initialData.journeyDate ?? '';
             journeyPreviewUrl.value = props.initialData.image ?? null;
         }
         if (type === 'gallery') {
+            form.clearErrors('galleryFile');
             galleryPreview.value = props.initialData.image
                 ? {
                       name: props.initialData.title ?? 'Selected photo',
@@ -157,9 +234,21 @@ watch(
                 : null;
         }
         if (type === 'cover') {
+            form.clearErrors('coverFile');
             coverPreviewUrl.value = props.initialData.image ?? null;
         }
     },
+);
+
+watch(
+    () => props.errors,
+    (incomingErrors) => {
+        if (!props.modelValue) return;
+        const mappedErrors = normalizeBackendErrors(incomingErrors);
+        if (!Object.keys(mappedErrors).length) return;
+        form.setError(mappedErrors);
+    },
+    { immediate: true, deep: true },
 );
 
 onBeforeUnmount(() => {
@@ -221,6 +310,12 @@ onBeforeUnmount(() => {
                                 Upload a sweet memory photo for your love
                                 journey.
                             </p>
+                            <p
+                                v-if="form.errors.journeyFile"
+                                class="mt-1 text-xs text-rose-600"
+                            >
+                                * {{ form.errors.journeyFile }}
+                            </p>
                         </label>
                         <div
                             v-if="journeyPreviewUrl"
@@ -243,6 +338,29 @@ onBeforeUnmount(() => {
                                 placeholder="Enter your love journey title"
                                 class="w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 ring-0 outline-none placeholder:text-rose-300 focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
                             />
+                            <p
+                                v-if="form.errors.journeyTitle"
+                                class="text-xs text-rose-600"
+                            >
+                                * {{ form.errors.journeyTitle }}
+                            </p>
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-sm font-semibold text-rose-700">
+                                Journey Date
+                            </span>
+                            <input
+                                v-model="form.journeyDate"
+                                type="date"
+                                class="w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 ring-0 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
+                            />
+                            <p
+                                v-if="form.errors.journeyDate"
+                                class="text-xs text-rose-600"
+                            >
+                                * {{ form.errors.journeyDate }}
+                            </p>
                         </label>
 
                         <label class="block space-y-1.5">
@@ -255,6 +373,12 @@ onBeforeUnmount(() => {
                                 class="w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 ring-0 outline-none placeholder:text-rose-300 focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
                                 placeholder="Write your beautiful memory..."
                             />
+                            <p
+                                v-if="form.errors.journeyDescription"
+                                class="text-xs text-rose-600"
+                            >
+                                * {{ form.errors.journeyDescription }}
+                            </p>
                         </label>
                     </div>
 
@@ -276,6 +400,12 @@ onBeforeUnmount(() => {
                             />
                             <p class="mt-2 text-xs text-rose-500">
                                 Choose one lovely photo.
+                            </p>
+                            <p
+                                v-if="form.errors.galleryFile"
+                                class="mt-1 text-xs text-rose-600"
+                            >
+                                * {{ form.errors.galleryFile }}
                             </p>
                         </label>
                         <div
@@ -317,6 +447,12 @@ onBeforeUnmount(() => {
                             />
                             <p class="mt-2 text-xs text-rose-500">
                                 This will replace the top cover image.
+                            </p>
+                            <p
+                                v-if="form.errors.coverFile"
+                                class="mt-1 text-xs text-rose-600"
+                            >
+                                * {{ form.errors.coverFile }}
                             </p>
                         </label>
                         <div
