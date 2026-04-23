@@ -301,7 +301,7 @@ onBeforeUnmount(() => {
 <template>
     <section
         ref="sectionRef"
-        class="relative isolate overflow-hidden bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
+        class="relative isolate -mb-1 overflow-hidden bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
     >
         <div class="mx-auto max-w-4xl">
             <div class="mb-8 text-center md:mb-12">

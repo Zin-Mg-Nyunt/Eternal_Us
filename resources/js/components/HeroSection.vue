@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
 
 <template>
     <section
-        class="relative min-h-screen overflow-hidden bg-rose-50 text-white"
+        class="hero-shell relative -mb-1 overflow-hidden bg-rose-50 text-white"
     >
         <svg class="absolute h-0 w-0" aria-hidden="true" focusable="false">
             <defs>
@@ -90,7 +90,7 @@ onBeforeUnmount(() => {
         </svg>
 
         <div
-            class="hero-wave-clip absolute inset-x-0 top-0 -bottom-4 md:-bottom-32"
+            class="hero-wave-clip hero-wave-layer absolute inset-x-0 top-0 bottom-0"
         >
             <img
                 src="/image/hero.webp"
@@ -125,10 +125,10 @@ onBeforeUnmount(() => {
         </div>
 
         <div
-            class="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-16 sm:px-10"
+            class="hero-content relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-16 sm:px-10"
         >
             <div
-                class="w-full rounded-3xl border border-white/70 bg-white/55 p-7 shadow-2xl shadow-rose-200/50 backdrop-blur-md sm:p-10 lg:max-w-3xl"
+                class="hero-card w-full rounded-3xl border border-white/70 bg-white/55 p-7 shadow-2xl shadow-rose-200/50 backdrop-blur-md sm:p-10 lg:max-w-3xl"
             >
                 <p class="mb-3 text-sm tracking-[0.26em] text-rose-700/90">
                     OUR LOVE STORY
@@ -172,28 +172,52 @@ onBeforeUnmount(() => {
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
 .timer-card {
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    background: rgba(255, 255, 255, 0.65);
-    box-shadow: 0 10px 24px rgba(255, 155, 188, 0.2);
-    padding: 0.9rem 0.65rem;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: clamp(0.16rem, 0.6vw, 0.35rem);
+    aspect-ratio: 1 / 1;
+    min-height: clamp(8.6rem, 23vw, 10.6rem);
+    padding: clamp(1.8rem, 5.8vw, 2.7rem) clamp(0.5rem, 1.8vw, 0.9rem)
+        clamp(1rem, 2.8vw, 1.35rem);
     text-align: center;
-    backdrop-filter: blur(3px);
+    overflow: hidden;
+}
+
+.timer-card::before {
+    content: '';
+    position: absolute;
+    inset: clamp(0rem, 0.45vw, 0.24rem);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 110'%3E%3Cpath d='M60 100C43 84 14 63 14 37C14 22 26 10 41 10C50 10 57 14 60 21C63 14 70 10 79 10C94 10 106 22 106 37C106 63 77 84 60 100Z' fill='none' stroke='rgba(255,255,255,0.92)' stroke-width='3'/%3E%3C/svg%3E");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 106% 106%;
+    filter: drop-shadow(0 10px 20px rgba(255, 155, 188, 0.26));
+    z-index: 0;
 }
 
 .timer-value {
+    position: relative;
+    z-index: 1;
     font-family: 'Playfair Display', serif;
-    font-size: clamp(1.4rem, 3vw, 2.2rem);
-    line-height: 1;
+    width: 100%;
+    line-height: 1.05;
+    font-size: clamp(0.98rem, 2.85vw, 1.72rem);
     color: #881337;
 }
 
 .timer-label {
-    margin-top: 0.45rem;
-    font-size: 0.73rem;
-    letter-spacing: 0.12em;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    line-height: 1.05;
+    font-size: clamp(0.72rem, 1.45vw, 0.95rem);
+    font-family: 'Great Vibes', cursive;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: rgba(136, 19, 55, 0.85);
+    color: #881337;
 }
 
 .rose-petal {
@@ -208,10 +232,75 @@ onBeforeUnmount(() => {
     -webkit-clip-path: url(#hero-wave-clip-desktop);
 }
 
+.hero-shell {
+    min-height: 100svh;
+}
+
+.hero-content {
+    min-height: 100svh;
+}
+
+@supports (height: 100dvh) {
+    .hero-shell,
+    .hero-content {
+        min-height: 100dvh;
+    }
+}
+
+.hero-wave-layer {
+    transform: translateZ(0);
+    will-change: clip-path;
+}
+
 @media (max-width: 767px) {
     .hero-wave-clip {
         clip-path: url(#hero-wave-clip-mobile);
         -webkit-clip-path: url(#hero-wave-clip-mobile);
+    }
+}
+
+@media (max-height: 760px) {
+    .hero-content {
+        align-items: flex-start;
+        padding-top: 4.75rem;
+        padding-bottom: 6.5rem;
+    }
+
+    .hero-card {
+        padding: 1.2rem;
+    }
+}
+
+@media (min-width: 640px) {
+    .timer-card {
+        min-height: clamp(9.5rem, 16vw, 11rem);
+        padding: clamp(2.1rem, 3.6vw, 2.7rem) 0.9rem clamp(1.25rem, 2vw, 1.5rem);
+    }
+}
+
+@media (max-width: 420px) {
+    .timer-card {
+        min-height: 8.35rem;
+        padding: 1.65rem 0.42rem 0.9rem;
+    }
+
+    .timer-value {
+        font-size: clamp(0.9rem, 4.1vw, 1.26rem);
+    }
+
+    .timer-label {
+        font-size: clamp(0.66rem, 3vw, 0.8rem);
+    }
+}
+
+@media (max-height: 700px) {
+    .hero-content {
+        padding-top: 4.15rem;
+        padding-bottom: 6rem;
+    }
+
+    .hero-wave-layer {
+        bottom: -0.75rem;
     }
 }
 

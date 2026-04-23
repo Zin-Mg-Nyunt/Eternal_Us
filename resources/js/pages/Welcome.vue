@@ -58,15 +58,16 @@ const onModalSubmit = ({
     id,
     type,
     journeyFile,
-    journeyStory,
-    galleryFiles,
-    heroFile,
+    journeyTitle,
+    journeyDescription,
+    galleryFile,
+    coverFile,
 }) => {
     if (type === 'journey') {
         const payload = {
             id: id ?? `journey-${Date.now()}`,
-            title: journeyStory?.trim() || 'Untitled Journey',
-            story: journeyStory?.trim() || '',
+            title: journeyTitle?.trim() || 'Untitled Journey',
+            story: journeyDescription?.trim() || 'No story yet',
             image: toPreviewUrl(
                 journeyFile,
                 modalInitialData.value?.image ?? '/image/one.webp',
@@ -77,15 +78,17 @@ const onModalSubmit = ({
             journeyItems.value = journeyItems.value.map((item) =>
                 item.id === id ? payload : item,
             );
+            console.log('I am updating the journey item');
         } else {
             journeyItems.value.unshift(payload);
+            console.log('I am creating a new journey item');
         }
         return;
     }
 
     if (type === 'gallery') {
         if (id) {
-            const [file] = galleryFiles?.length ? galleryFiles : [null];
+            const file = galleryFile ?? null;
             galleryItems.value = galleryItems.value.map((item) =>
                 item.id === id
                     ? {
@@ -98,22 +101,19 @@ const onModalSubmit = ({
             return;
         }
 
-        const files = galleryFiles?.length ? galleryFiles : [null];
-        files.forEach((file, index) => {
-            galleryItems.value.unshift({
-                id: `gallery-${Date.now()}-${index}`,
-                title:
-                    file?.name ||
-                    `Gallery Photo ${galleryItems.value.length + 1}`,
-                image: toPreviewUrl(file, '/image/two.webp'),
-            });
+        const file = galleryFile ?? null;
+        galleryItems.value.unshift({
+            id: `gallery-${Date.now()}`,
+            title:
+                file?.name || `Gallery Photo ${galleryItems.value.length + 1}`,
+            image: toPreviewUrl(file, '/image/two.webp'),
         });
         return;
     }
 
-    if (type === 'hero' && heroFile) {
+    if (type === 'cover' && coverFile) {
         // Placeholder until HeroSection receives image from store or API.
-        console.info('Hero image selected:', heroFile.name);
+        console.info('Cover image selected:', coverFile.name);
     }
 };
 

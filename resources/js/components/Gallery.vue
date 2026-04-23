@@ -8,7 +8,6 @@ const props = defineProps({
             {
                 src: './image/hero.webp',
                 alt: 'A sweet date memory',
-                showSticker: true,
             },
             {
                 src: './image/two.webp',
@@ -17,7 +16,6 @@ const props = defineProps({
             {
                 src: './image/hero.webp',
                 alt: 'A cozy coffee shop moment',
-                showSticker: true,
             },
             {
                 src: './image/four.webp',
@@ -26,7 +24,6 @@ const props = defineProps({
             {
                 src: './image/one.webp',
                 alt: 'Travel memory we cherish',
-                showSticker: true,
             },
             {
                 src: './image/three.webp',
@@ -39,7 +36,6 @@ const props = defineProps({
             {
                 src: './image/hero.webp',
                 alt: 'Our favorite little adventure',
-                showSticker: true,
             },
             {
                 src: './image/four.webp',
@@ -48,7 +44,6 @@ const props = defineProps({
             {
                 src: './image/two.webp',
                 alt: 'A candid smile we love forever',
-                showSticker: true,
             },
             {
                 src: './image/one.webp',
@@ -57,7 +52,6 @@ const props = defineProps({
             {
                 src: './image/three.webp',
                 alt: 'Sunday picnic in our favorite park',
-                showSticker: true,
             },
         ],
     },
@@ -126,7 +120,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section class="min-h-screen bg-rose-50 px-4 py-16 sm:px-6 md:py-24">
+    <section class="-mb-1 min-h-screen bg-rose-50 px-4 py-16 sm:px-6 md:py-24">
         <div class="mx-auto max-w-7xl">
             <div class="mb-8 text-center md:mb-12">
                 <p class="text-sm tracking-[0.22em] text-rose-500 uppercase">
@@ -156,13 +150,6 @@ onBeforeUnmount(() => {
                         :alt="image.alt || `Memory photo ${index + 1}`"
                         class="w-full rounded-3xl border border-rose-100 object-cover shadow-[0_12px_34px_rgba(251,113,133,0.22)] transition duration-300 ease-out group-hover:scale-105 group-hover:shadow-[0_20px_48px_rgba(244,114,182,0.34)]"
                     />
-
-                    <span
-                        v-if="image.showSticker || index % 3 === 0"
-                        class="pointer-events-none absolute top-2 right-2 inline-flex rounded-full bg-white/85 p-1.5 text-base shadow-md shadow-pink-200/80 backdrop-blur-sm"
-                    >
-                        ❤️
-                    </span>
                 </article>
             </div>
         </div>

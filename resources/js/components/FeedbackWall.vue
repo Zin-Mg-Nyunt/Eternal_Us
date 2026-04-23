@@ -233,7 +233,7 @@ onBeforeUnmount(() => {
 <template>
     <section
         ref="sectionRef"
-        class="relative w-full overflow-hidden bg-rose-50 px-0 py-16 md:py-24"
+        class="relative -mb-1 w-full overflow-hidden bg-rose-50 px-0 py-16 md:py-24"
     >
         <div class="w-full">
             <div class="mb-8 text-center md:mb-12">

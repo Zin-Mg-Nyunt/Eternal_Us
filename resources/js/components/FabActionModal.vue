@@ -28,13 +28,14 @@ const emit = defineEmits(['update:modelValue', 'submit', 'edit-item']);
 
 const form = reactive({
     journeyFile: null,
-    journeyStory: '',
-    galleryFiles: [],
-    heroFile: null,
+    journeyTitle: '',
+    journeyDescription: '',
+    galleryFile: null,
+    coverFile: null,
 });
 const journeyPreviewUrl = ref(null);
-const heroPreviewUrl = ref(null);
-const galleryPreviewUrls = ref([]);
+const coverPreviewUrl = ref(null);
+const galleryPreview = ref(null);
 
 const configByType = {
     journey: {
@@ -45,9 +46,9 @@ const configByType = {
         title: 'Upload Gallery Photos',
         submitLabel: 'Upload Photo',
     },
-    hero: {
-        title: 'Update Hero Background',
-        submitLabel: 'Upload Hero Image',
+    cover: {
+        title: 'Update Cover Image',
+        submitLabel: 'Upload Cover Image',
     },
     manage: {
         title: 'Manage Memories',
@@ -70,11 +71,11 @@ const revokePreview = (url) => {
 
 const resetPreviews = () => {
     revokePreview(journeyPreviewUrl.value);
-    revokePreview(heroPreviewUrl.value);
-    galleryPreviewUrls.value.forEach((item) => revokePreview(item.url));
+    revokePreview(coverPreviewUrl.value);
+    revokePreview(galleryPreview.value?.url);
     journeyPreviewUrl.value = null;
-    heroPreviewUrl.value = null;
-    galleryPreviewUrls.value = [];
+    coverPreviewUrl.value = null;
+    galleryPreview.value = null;
 };
 
 const onJourneyFileChange = (event) => {
@@ -85,19 +86,22 @@ const onJourneyFileChange = (event) => {
 };
 
 const onGalleryFileChange = (event) => {
-    form.galleryFiles = Array.from(event.target.files ?? []);
-    galleryPreviewUrls.value.forEach((item) => revokePreview(item.url));
-    galleryPreviewUrls.value = form.galleryFiles.map((file) => ({
-        name: file.name,
-        url: URL.createObjectURL(file),
-    }));
+    const [file] = event.target.files ?? [];
+    revokePreview(galleryPreview.value?.url);
+    form.galleryFile = file ?? null;
+    galleryPreview.value = file
+        ? {
+              name: file.name,
+              url: URL.createObjectURL(file),
+          }
+        : null;
 };
 
-const onHeroFileChange = (event) => {
+const onCoverFileChange = (event) => {
     const [file] = event.target.files ?? [];
-    revokePreview(heroPreviewUrl.value);
-    form.heroFile = file ?? null;
-    heroPreviewUrl.value = file ? URL.createObjectURL(file) : null;
+    revokePreview(coverPreviewUrl.value);
+    form.coverFile = file ?? null;
+    coverPreviewUrl.value = file ? URL.createObjectURL(file) : null;
 };
 
 const onSubmit = () => {
@@ -112,9 +116,10 @@ const onSubmit = () => {
         type: props.type,
         id: props.initialData?.id ?? null,
         journeyFile: form.journeyFile,
-        journeyStory: form.journeyStory,
-        galleryFiles: form.galleryFiles,
-        heroFile: form.heroFile,
+        journeyTitle: form.journeyTitle,
+        journeyDescription: form.journeyDescription,
+        galleryFile: form.galleryFile,
+        coverFile: form.coverFile,
     };
 
     emit('submit', payload);
@@ -126,9 +131,10 @@ watch(
     (open) => {
         if (open) return;
         form.journeyFile = null;
-        form.journeyStory = '';
-        form.galleryFiles = [];
-        form.heroFile = null;
+        form.journeyTitle = '';
+        form.journeyDescription = '';
+        form.galleryFile = null;
+        form.coverFile = null;
         resetPreviews();
     },
 );
@@ -138,22 +144,20 @@ watch(
     ([open, type]) => {
         if (!open || !props.initialData) return;
         if (type === 'journey') {
-            form.journeyStory =
-                props.initialData.story ?? props.initialData.title ?? '';
+            form.journeyTitle = props.initialData.title ?? '';
+            form.journeyDescription = props.initialData.story ?? '';
             journeyPreviewUrl.value = props.initialData.image ?? null;
         }
         if (type === 'gallery') {
-            galleryPreviewUrls.value = props.initialData.image
-                ? [
-                      {
-                          name: props.initialData.title ?? 'Selected photo',
-                          url: props.initialData.image,
-                      },
-                  ]
-                : [];
+            galleryPreview.value = props.initialData.image
+                ? {
+                      name: props.initialData.title ?? 'Selected photo',
+                      url: props.initialData.image,
+                  }
+                : null;
         }
-        if (type === 'hero') {
-            heroPreviewUrl.value = props.initialData.image ?? null;
+        if (type === 'cover') {
+            coverPreviewUrl.value = props.initialData.image ?? null;
         }
     },
 );
@@ -174,7 +178,7 @@ onBeforeUnmount(() => {
     >
         <div
             v-if="modelValue && modalConfig"
-            class="fixed inset-0 z-10000 flex items-center justify-center bg-rose-950/30 px-4 py-6 backdrop-blur-sm sm:px-6"
+            class="fixed inset-0 z-10000 flex items-center justify-center bg-rose-100/30 px-4 py-6 backdrop-blur-sm sm:px-6"
             @click.self="closeModal"
         >
             <div
@@ -231,10 +235,22 @@ onBeforeUnmount(() => {
 
                         <label class="block space-y-1.5">
                             <span class="text-sm font-semibold text-rose-700">
+                                Love Journey Title
+                            </span>
+                            <input
+                                v-model="form.journeyTitle"
+                                type="text"
+                                placeholder="Enter your love journey title"
+                                class="w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 ring-0 outline-none placeholder:text-rose-300 focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
+                            />
+                        </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-sm font-semibold text-rose-700">
                                 Story / Description
                             </span>
                             <textarea
-                                v-model="form.journeyStory"
+                                v-model="form.journeyDescription"
                                 rows="5"
                                 class="w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 ring-0 outline-none placeholder:text-rose-300 focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
                                 placeholder="Write your beautiful memory..."
@@ -255,65 +271,61 @@ onBeforeUnmount(() => {
                             <input
                                 type="file"
                                 accept="image/*"
-                                multiple
                                 class="block w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm text-rose-700 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-100 file:px-3 file:py-1.5 file:text-rose-700 file:transition hover:file:bg-rose-200"
                                 @change="onGalleryFileChange"
                             />
                             <p class="mt-2 text-xs text-rose-500">
-                                Choose one or many lovely photos.
+                                Choose one lovely photo.
                             </p>
                         </label>
                         <div
-                            v-if="galleryPreviewUrls.length"
-                            class="grid grid-cols-2 gap-2 sm:grid-cols-3"
+                            v-if="galleryPreview"
+                            class="grid grid-cols-1 gap-2 sm:max-w-56"
                         >
                             <article
-                                v-for="item in galleryPreviewUrls"
-                                :key="item.url"
                                 class="overflow-hidden rounded-xl border border-rose-200 bg-white p-1.5 shadow-sm"
                             >
                                 <img
-                                    :src="item.url"
-                                    :alt="item.name"
+                                    :src="galleryPreview.url"
+                                    :alt="galleryPreview.name"
                                     class="h-24 w-full rounded-lg object-cover sm:h-28"
                                 />
                                 <p
                                     class="mt-1 truncate text-[11px] text-rose-500"
-                                    :title="item.name"
+                                    :title="galleryPreview.name"
                                 >
-                                    {{ item.name }}
+                                    {{ galleryPreview.name }}
                                 </p>
                             </article>
                         </div>
                     </div>
 
-                    <div v-else-if="type === 'hero'" class="space-y-3">
+                    <div v-else-if="type === 'cover'" class="space-y-3">
                         <label
                             class="block cursor-pointer rounded-2xl border border-dashed border-rose-300 bg-white/80 p-4 transition hover:border-rose-400 hover:bg-rose-50/70"
                         >
                             <span
                                 class="mb-2 inline-flex items-center gap-1 text-sm font-semibold text-rose-700"
                             >
-                                <span aria-hidden="true">🌸</span> Hero
-                                Background Image
+                                <span aria-hidden="true">🌸</span> Cover Image
                             </span>
                             <input
                                 type="file"
                                 accept="image/*"
                                 class="block w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm text-rose-700 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-100 file:px-3 file:py-1.5 file:text-rose-700 file:transition hover:file:bg-rose-200"
-                                @change="onHeroFileChange"
+                                @change="onCoverFileChange"
                             />
                             <p class="mt-2 text-xs text-rose-500">
-                                This will replace the top hero image.
+                                This will replace the top cover image.
                             </p>
                         </label>
                         <div
-                            v-if="heroPreviewUrl"
+                            v-if="coverPreviewUrl"
                             class="overflow-hidden rounded-2xl border border-rose-200 bg-white p-2 shadow-sm"
                         >
                             <img
-                                :src="heroPreviewUrl"
-                                alt="Hero preview"
+                                :src="coverPreviewUrl"
+                                alt="Cover preview"
                                 class="h-44 w-full rounded-xl object-cover sm:h-52"
                             />
                         </div>

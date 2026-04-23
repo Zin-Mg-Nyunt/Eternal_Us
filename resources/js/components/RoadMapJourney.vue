@@ -351,7 +351,7 @@ onBeforeUnmount(() => {
 <template>
     <section
         ref="sectionRef"
-        class="relative min-h-screen bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
+        class="relative -mb-1 min-h-screen bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
     >
         <div class="no-scrollbar mx-auto max-w-6xl">
             <div class="mb-10 text-center md:mb-14">
