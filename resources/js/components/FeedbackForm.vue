@@ -1,14 +1,16 @@
 <script setup>
-import { nextTick, onBeforeUnmount, ref } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import { gsap } from 'gsap';
+import AuthAccessModal from '@/components/AuthAccessModal.vue';
 
 const PETAL_COUNT = 20;
 
-const name = ref('');
-const message = ref('');
 const showFieldError = ref(false);
 const petals = ref([]);
 const successBalloons = ref([]);
+const authModalOpen = ref(false);
+const authModalMode = ref('login');
 
 const sectionRef = ref(null);
 const formCardRef = ref(null);
@@ -18,6 +20,12 @@ const petalRefs = ref([]);
 const balloonRefs = ref([]);
 let petalBurstTimeline = null;
 let successTimeline = null;
+
+const wishForm = useForm({
+    message: '',
+});
+const page = usePage();
+const user = computed(() => page.props.auth?.user ?? null);
 
 const setPetalRef = (el, index) => {
     if (!el) return;
@@ -275,7 +283,13 @@ const playSuccessAnimation = async () => {
 };
 
 const onSubmit = async () => {
-    const valid = name.value.trim() && message.value.trim();
+    if (!user.value) {
+        authModalMode.value = 'login';
+        authModalOpen.value = true;
+        return;
+    }
+
+    const valid = wishForm.message.trim();
     if (!valid) {
         showFieldError.value = true;
         await playErrorAnimation();
@@ -283,9 +297,17 @@ const onSubmit = async () => {
     }
 
     showFieldError.value = false;
-    name.value = '';
-    message.value = '';
-    await playSuccessAnimation();
+    wishForm.post(route('wish.add'), {
+        preserveScroll: true,
+        onSuccess: async () => {
+            wishForm.reset();
+            await playSuccessAnimation();
+        },
+        onError: async () => {
+            showFieldError.value = true;
+            await playErrorAnimation();
+        },
+    });
 };
 
 onBeforeUnmount(() => {
@@ -354,35 +376,30 @@ onBeforeUnmount(() => {
                         <div>
                             <label
                                 class="mb-1 block text-xs font-semibold tracking-[0.14em] text-rose-600 uppercase"
-                                >Name</label
-                            >
-                            <input
-                                v-model="name"
-                                type="text"
-                                class="love-input"
-                                placeholder="Your lovely name"
-                            />
-                        </div>
-                        <div>
-                            <label
-                                class="mb-1 block text-xs font-semibold tracking-[0.14em] text-rose-600 uppercase"
                                 >Message</label
                             >
                             <textarea
-                                v-model="message"
+                                v-model="wishForm.message"
                                 rows="4"
                                 class="love-input love-textarea"
                                 placeholder="Write your sweet love message..."
                             />
                         </div>
+                        <p
+                            v-if="wishForm.errors.message"
+                            class="text-sm text-rose-600"
+                        >
+                            {{ wishForm.errors.message }}
+                        </p>
                         <p v-if="showFieldError" class="text-sm text-rose-600">
-                            Please fill in both name and message.
+                            Please fill in your message.
                         </p>
                         <button
                             type="submit"
+                            :disabled="wishForm.processing"
                             class="rounded-full border border-rose-300 bg-linear-to-r from-rose-500 to-pink-400 px-6 py-2 font-semibold text-white shadow-[0_10px_22px_rgba(244,114,182,0.35)] transition hover:scale-[1.02] hover:from-rose-600 hover:to-pink-500"
                         >
-                            Submit
+                            {{ wishForm.processing ? 'Submitting...' : 'Submit' }}
                         </button>
                     </div>
                 </form>
@@ -425,6 +442,11 @@ onBeforeUnmount(() => {
                 </span>
             </div>
         </div>
+
+        <AuthAccessModal
+            v-model="authModalOpen"
+            :initial-mode="authModalMode"
+        />
     </section>
 </template>
 

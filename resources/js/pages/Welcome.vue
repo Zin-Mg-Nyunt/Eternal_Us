@@ -22,6 +22,10 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    wishes: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const activeModalType = ref(null);
@@ -32,6 +36,7 @@ const errors = ref({});
 const journeyItems = ref(props.journeyItems ?? []);
 
 const galleryItems = ref(props.galleryItems ?? []);
+const wishes = ref(props.wishes ?? []);
 
 watch(
     () => props.journeyItems,
@@ -45,6 +50,14 @@ watch(
     () => props.galleryItems,
     (incoming) => {
         galleryItems.value = incoming ?? [];
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.wishes,
+    (incoming) => {
+        wishes.value = incoming ?? [];
     },
     { deep: true },
 );
@@ -174,7 +187,7 @@ const onEditItem = async ({ item, type }) => {
         "
     />
     <Gallery :images="galleryItems.map((item) => ({ src: item.image, alt: item.title ?? 'Gallery photo' }))" />
-    <FeedbackWall />
+    <FeedbackWall :feedbacks="wishes" />
     <FeedbackForm />
     <FloatingRoseFab @select="onFabSelect" />
 

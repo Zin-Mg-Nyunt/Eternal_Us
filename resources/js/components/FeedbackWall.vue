@@ -6,39 +6,7 @@ import { Draggable } from 'gsap/Draggable';
 const props = defineProps({
     feedbacks: {
         type: Array,
-        default: () => [
-            {
-                name: 'May',
-                message: 'Every moment with you feels soft, warm, and magical.',
-                tone: 'bg-rose-100',
-            },
-            {
-                name: 'Ko',
-                message:
-                    'Our little memories are my favorite place to live in.',
-                tone: 'bg-pink-100',
-            },
-            {
-                name: 'Yuki',
-                message: 'You make ordinary days look like love letters.',
-                tone: 'bg-fuchsia-100',
-            },
-            {
-                name: 'Nora',
-                message: 'This space feels like a scrapbook of pure happiness.',
-                tone: 'bg-rose-50',
-            },
-            {
-                name: 'Ari',
-                message: 'Still falling for you in new ways, every single day.',
-                tone: 'bg-pink-50',
-            },
-            {
-                name: 'Su',
-                message: 'Our story is gentle, beautiful, and forever mine.',
-                tone: 'bg-red-50',
-            },
-        ],
+        default: () => [],
     },
 });
 

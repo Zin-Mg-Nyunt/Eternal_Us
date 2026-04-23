@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cover;
 use App\Models\Gallery;
 use App\Models\Journey;
+use App\Models\Wish;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -36,11 +37,24 @@ class ActionController extends Controller
             ]);
 
         $cover = Cover::query()->latest()->first();
+        $tones = ['bg-rose-100', 'bg-pink-100', 'bg-fuchsia-100', 'bg-rose-50'];
+        $wishes = Wish::query()
+            ->latest()
+            ->with('user:id,name')
+            ->get()
+            ->values()
+            ->map(fn (Wish $wish, int $index) => [
+                'id' => $wish->id,
+                'name' => $wish->user?->name ?? 'Unknown',
+                'message' => $wish->message,
+                'tone' => $tones[$index % count($tones)],
+            ]);
 
         return Inertia::render('Welcome', [
             'journeyItems' => $journeys,
             'galleryItems' => $galleries,
             'coverImage' => $cover?->image_url,
+            'wishes' => $wishes,
         ]);
     }
 
@@ -177,6 +191,26 @@ class ActionController extends Controller
             ['singleton' => true],
             ['image_url' => $path],
         );
+
+        return back();
+    }
+
+    public function addWish(Request $request)
+    {
+        if (!$request->user()) {
+            return back()->withErrors([
+                'auth' => 'Please log in to submit a wish.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+
+        Wish::create([
+            'user_id' => $request->user()->id,
+            'message' => $validated['message'],
+        ]);
 
         return back();
     }

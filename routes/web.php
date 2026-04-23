@@ -10,6 +10,7 @@ Route::post('/gallery/add', [ActionController::class, 'addGallery'])->name('gall
 Route::post('/gallery/update', [ActionController::class, 'updateGallery'])->name('gallery.update');
 Route::post('/cover/add', [ActionController::class, 'addCover'])->name('cover.add');
 Route::post('/cover/update', [ActionController::class, 'updateCover'])->name('cover.update');
+Route::post('/wish/add', [ActionController::class, 'addWish'])->middleware('auth')->name('wish.add');
 Route::fallback(function(){
     return redirect('/');
 });
