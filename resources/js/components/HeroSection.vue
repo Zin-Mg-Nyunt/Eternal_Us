@@ -185,7 +185,7 @@ onBeforeUnmount(() => {
     display: grid;
     align-content: center;
     justify-items: center;
-    gap: clamp(0.16rem, 0.6vw, 0.35rem);
+    gap: clamp(0.5rem, 1.5vw, 2rem);
     aspect-ratio: 1 / 1;
     min-height: clamp(8.6rem, 23vw, 10.6rem);
     padding: clamp(1.8rem, 5.8vw, 2.7rem) clamp(0.5rem, 1.8vw, 0.9rem)

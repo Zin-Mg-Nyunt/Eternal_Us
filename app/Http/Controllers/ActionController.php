@@ -30,6 +30,7 @@ class ActionController extends Controller
 
         $galleries = Gallery::query()
             ->latest()
+            ->take(12)
             ->get()
             ->map(fn (Gallery $gallery) => [
                 'id' => $gallery->id,
@@ -53,6 +54,17 @@ class ActionController extends Controller
         return Inertia::render('Welcome', [
             'journeyItems' => $journeys,
             'galleryItems' => $galleries,
+            'galleryPages' => Inertia::scroll(function () {
+                $paginator = Gallery::query()->latest()->paginate(20);
+                $paginator->setCollection(
+                    $paginator->getCollection()->map(fn (Gallery $gallery) => [
+                        'id' => $gallery->id,
+                        'image' => $gallery->image_url,
+                    ]),
+                );
+
+                return $paginator;
+            }),
             'coverImage' => $cover?->image_url,
             'wishes' => $wishes,
         ]);
@@ -77,7 +89,7 @@ class ActionController extends Controller
         ]);
 
         return back();
-        
+
     }
 
     public function updateJourney(Request $request)
@@ -197,7 +209,7 @@ class ActionController extends Controller
 
     public function addWish(Request $request)
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return back()->withErrors([
                 'auth' => 'Please log in to submit a wish.',
             ]);

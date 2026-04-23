@@ -18,6 +18,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    galleryPages: {
+        type: Object,
+        default: () => ({ data: [] }),
+    },
     coverImage: {
         type: String,
         default: null,
@@ -36,6 +40,7 @@ const errors = ref({});
 const journeyItems = ref(props.journeyItems ?? []);
 
 const galleryItems = ref(props.galleryItems ?? []);
+const galleryPages = ref(props.galleryPages ?? { data: [] });
 const wishes = ref(props.wishes ?? []);
 
 watch(
@@ -50,6 +55,14 @@ watch(
     () => props.galleryItems,
     (incoming) => {
         galleryItems.value = incoming ?? [];
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.galleryPages,
+    (incoming) => {
+        galleryPages.value = incoming ?? { data: [] };
     },
     { deep: true },
 );
@@ -186,7 +199,10 @@ const onEditItem = async ({ item, type }) => {
             }))
         "
     />
-    <Gallery :images="galleryItems.map((item) => ({ src: item.image, alt: item.title ?? 'Gallery photo' }))" />
+    <Gallery
+        :images="galleryItems.map((item) => ({ src: item.image, alt: item.title ?? 'Gallery photo' }))"
+        :gallery-pages="galleryPages"
+    />
     <FeedbackWall :feedbacks="wishes" />
     <FeedbackForm />
     <FloatingRoseFab @select="onFabSelect" />
