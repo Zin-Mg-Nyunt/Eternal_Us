@@ -149,7 +149,8 @@ const nodeTopPositions = computed(() => {
 
     props.memories.forEach((_, index) => {
         positions.push(nextTop);
-        const currentHeight = nodeHeights.value[index] ?? estimatedNodeHeight.value;
+        const currentHeight =
+            nodeHeights.value[index] ?? estimatedNodeHeight.value;
         nextTop += currentHeight + verticalGap.value;
     });
 
@@ -160,7 +161,8 @@ const totalHeight = computed(() => {
     if (!props.memories.length) return 420;
     const lastIndex = props.memories.length - 1;
     const lastTop = nodeTopPositions.value[lastIndex] ?? TOP_OFFSET;
-    const lastHeight = nodeHeights.value[lastIndex] ?? estimatedNodeHeight.value;
+    const lastHeight =
+        nodeHeights.value[lastIndex] ?? estimatedNodeHeight.value;
     return lastTop + lastHeight + TOP_OFFSET;
 });
 
@@ -282,7 +284,8 @@ const resetRefCollections = () => {
 const syncNodeHeights = async () => {
     await nextTick();
     nodeHeights.value = props.memories.map(
-        (_, index) => memoryNodes.value[index]?.offsetHeight ?? estimatedNodeHeight.value,
+        (_, index) =>
+            memoryNodes.value[index]?.offsetHeight ?? estimatedNodeHeight.value,
     );
 };
 

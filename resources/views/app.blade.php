@@ -30,9 +30,9 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="/favicon.png" type="image/png">
+        <link rel="icon" href="/favicon.png" sizes="any">
+        <link rel="apple-touch-icon" href="/favicon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
@@ -44,6 +44,58 @@
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">
+        <div id="app-loading" aria-live="polite" aria-label="Loading">
+            <div id="app-loading-logo-wrap" class="animate-ping [animation-duration: 2.5s] flex flex-col items-center justify-center gap-3">
+                <div id="app-loading-logo"></div>
+                <img src="/favicon.png" alt="Loading" class="w-16 h-16">
+            </div>
+        </div>
         <x-inertia::app />
+        <style>
+            #app-loading {
+                position: fixed;
+                inset: 0;
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.9rem;
+                background: linear-gradient(135deg, #fff1f2, #ffe4e6, #ffe4e6);
+                color: #9f1239;
+                transition: opacity 0.35s ease, transform 0.38s ease, filter 0.38s ease;
+                transform: scale(1);
+                filter: blur(0);
+            }
+
+            #app-loading p {
+                margin: 0;
+                font-size: 0.9rem;
+                letter-spacing: 0.08em;
+                font-weight: 700;
+            }
+
+            #app-loading.is-hidden {
+                opacity: 0;
+                transform: scale(1.035);
+                filter: blur(1px);
+                pointer-events: none;
+            }
+
+            #app-loading.is-hidden #app-loading-logo-wrap {
+                animation: app-loading-logo-out 0.36s ease forwards;
+            }
+
+            @keyframes app-loading-logo-out {
+                from {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+                to {
+                    transform: scale(1.18);
+                    opacity: 0;
+                }
+            }
+        </style>
     </body>
 </html>

@@ -1,14 +1,34 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import { createApp, h } from 'vue';
+import { ZiggyVue } from 'ziggy-js';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
-import { ZiggyVue } from 'ziggy-js';
 import { Ziggy } from './ziggy';
-import { createApp, h } from 'vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const loadingRoot = document.getElementById('app-loading-logo');
+const loadingOverlay = document.getElementById('app-loading');
+const loadingApp = loadingRoot
+    ? createApp({
+          render: () => h(AppLogoIcon),
+      }).mount(loadingRoot)
+    : null;
+
+const hideInitialLoading = () => {
+    if (!loadingOverlay) {
+        return;
+    }
+
+    loadingOverlay.classList.add('is-hidden');
+    window.setTimeout(() => {
+        loadingApp?.$el?.remove?.();
+        loadingOverlay.remove();
+    }, 420);
+};
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -31,6 +51,8 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue, Ziggy)
             .mount(el ?? '');
+
+        hideInitialLoading();
     },
     progress: {
         color: '#4B5563',
