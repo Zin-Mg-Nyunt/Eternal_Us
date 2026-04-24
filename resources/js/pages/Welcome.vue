@@ -200,7 +200,12 @@ const onEditItem = async ({ item, type }) => {
         "
     />
     <Gallery
-        :images="galleryItems.map((item) => ({ src: item.image, alt: item.title ?? 'Gallery photo' }))"
+        :images="
+            galleryItems.map((item) => ({
+                src: item.image,
+                alt: item.title ?? 'Gallery photo',
+            }))
+        "
         :gallery-pages="galleryPages"
     />
     <FeedbackWall :feedbacks="wishes" />
