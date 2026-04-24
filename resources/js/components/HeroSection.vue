@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     coverImage: {
@@ -8,45 +9,38 @@ const props = defineProps({
     },
 });
 
-const relationshipStartedAt = '2020-08-29T23:48:00';
-const startDate = new Date(relationshipStartedAt);
-const now = ref(new Date());
-const formattedStartDate = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-}).format(startDate);
-
+const anniversary = usePage().props.anniversary;
+const mood = ref('relationship');
 const timer = computed(() => {
-    const current = new Date(now.value);
-
-    let years = current.getFullYear() - startDate.getFullYear();
-    let months = current.getMonth() - startDate.getMonth();
-    let days = current.getDate() - startDate.getDate();
-
-    if (days < 0) {
-        months -= 1;
-        const previousMonthDays = new Date(
-            current.getFullYear(),
-            current.getMonth(),
-            0,
-        ).getDate();
-        days += previousMonthDays;
-    }
-
-    if (months < 0) {
-        years -= 1;
-        months += 12;
-    }
-
     return {
-        years: Math.max(0, years),
-        months: Math.max(0, months),
-        days: Math.max(0, days),
+        years: anniversary[mood.value].years,
+        months: anniversary[mood.value].months,
+        days: anniversary[mood.value].days,
     };
 });
+
+const relationshipDateFormat = anniversary.relationship.dateFormat;
+const marriageDateFormat = anniversary.marriage.dateFormat;
+const anniversaryBanner = computed(() => anniversary.banner ?? null);
+const showAnniversaryBanner = computed(() =>
+    Boolean(anniversary.showBanner && anniversaryBanner.value),
+);
+const anniversaryBannerClass = computed(() =>
+    anniversaryBanner.value?.type === 'marriage'
+        ? 'bg-gradient-to-r from-fuchsia-100/95 via-rose-100/95 to-pink-100/95 text-fuchsia-900 border-fuchsia-200/70'
+        : 'bg-gradient-to-r from-rose-100/95 via-pink-100/95 to-amber-100/95 text-rose-900 border-rose-200/70',
+);
+const setMood = (nextMood) => {
+    if (nextMood === mood.value) {
+        return;
+    }
+
+    mood.value = nextMood;
+};
+const moodButtonClass = (targetMood) =>
+    mood.value === targetMood
+        ? 'bg-rose-600 text-white shadow-md shadow-rose-200'
+        : 'bg-white/70 text-rose-700 hover:bg-white';
 
 const petals = Array.from({ length: 16 }, (_, index) => ({
     id: index + 1,
@@ -57,24 +51,26 @@ const petals = Array.from({ length: 16 }, (_, index) => ({
     drift: `${(Math.random() * 80 - 40).toFixed(2)}px`,
     opacity: (0.72 + Math.random() * 0.28).toFixed(2),
 }));
-
-let intervalId;
-
-onMounted(() => {
-    intervalId = setInterval(() => {
-        now.value = new Date();
-    }, 1000);
-});
-
-onBeforeUnmount(() => {
-    clearInterval(intervalId);
-});
 </script>
 
 <template>
     <section
         class="hero-shell relative -mb-1 overflow-hidden bg-rose-50 text-white"
     >
+        <div
+            v-if="showAnniversaryBanner"
+            class="absolute inset-x-0 top-0 z-40 border-b px-4 py-2 backdrop-blur-sm"
+            :class="anniversaryBannerClass"
+        >
+            <div
+                class="mx-auto flex w-full max-w-6xl items-center justify-center gap-2 py-3 text-center"
+            >
+                <p class="text-sm font-semibold tracking-wide sm:text-base">
+                    🌸 {{ anniversaryBanner?.message }} 🌸
+                </p>
+            </div>
+        </div>
+
         <svg class="absolute h-0 w-0" aria-hidden="true" focusable="false">
             <defs>
                 <clipPath
@@ -136,8 +132,29 @@ onBeforeUnmount(() => {
             class="hero-content relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-16 sm:px-10"
         >
             <div
-                class="hero-card w-full rounded-3xl border border-white/70 bg-white/55 p-7 shadow-2xl shadow-rose-200/50 backdrop-blur-md sm:p-10 lg:max-w-3xl"
+                class="hero-card relative w-full rounded-3xl border border-white/70 bg-white/55 p-7 shadow-2xl shadow-rose-200/50 backdrop-blur-md sm:p-10 lg:max-w-3xl"
             >
+                <div
+                    class="absolute top-4 right-4 z-10 inline-flex flex-col gap-1 rounded-2xl bg-rose-100/80 p-1 sm:flex-row"
+                >
+                    <button
+                        type="button"
+                        class="cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide transition-all duration-300 sm:text-sm"
+                        :class="moodButtonClass('relationship')"
+                        @click="setMood('relationship')"
+                    >
+                        Relationship
+                    </button>
+                    <button
+                        type="button"
+                        class="cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide transition-all duration-300 sm:text-sm"
+                        :class="moodButtonClass('marriage')"
+                        @click="setMood('marriage')"
+                    >
+                        Marriage
+                    </button>
+                </div>
+
                 <p class="mb-3 text-sm tracking-[0.26em] text-rose-700/90">
                     OUR LOVE STORY
                 </p>
@@ -147,28 +164,78 @@ onBeforeUnmount(() => {
                 >
                     Eternal Us
                 </h1>
+                <div class="mt-2">
+                    <Transition name="mood-copy" mode="out-in">
+                        <div :key="`copy-${mood}`" class="mood-copy-panel">
+                            <div v-if="mood === 'relationship'">
+                                <p
+                                    class="mt-6 max-w-2xl text-base leading-relaxed text-rose-800/90 sm:text-lg"
+                                >
+                                    Our Beautiful Beginning
+                                </p>
+                                <p class="mt-3 text-sm text-rose-700/85">
+                                    Every second since we first met has been a
+                                    chapter of grace. Here’s to the love that
+                                    started it all.
+                                </p>
+                                <p class="mt-3 text-sm text-rose-700/85">
+                                    <span class="font-bold">Since:</span>
+                                    {{ relationshipDateFormat }}
+                                </p>
+                            </div>
+                            <div v-else>
+                                <p
+                                    class="mt-6 max-w-2xl text-base leading-relaxed text-rose-800/90 sm:text-lg"
+                                >
+                                    Hand in Hand, Forever
+                                </p>
+                                <p class="mt-3 text-sm text-rose-700/85">
+                                    The day we promised our lives to each other.
+                                    A journey of two hearts beating as one,
+                                    forever and always.
+                                </p>
+                                <p class="mt-3 text-sm text-rose-700/85">
+                                    <span class="font-bold">Date:</span>
+                                    {{ marriageDateFormat }}
+                                </p>
+                            </div>
+                        </div>
+                    </Transition>
 
-                <p
-                    class="mt-6 max-w-2xl text-base leading-relaxed text-rose-800/90 sm:text-lg"
-                >
-                    Where every second counts in our journey together.
-                </p>
-                <p class="mt-3 text-sm text-rose-700/85">
-                    Since {{ formattedStartDate }}
-                </p>
-
-                <div class="mt-10 grid grid-cols-3 gap-3 sm:gap-4">
-                    <div class="timer-card">
-                        <p class="timer-value">{{ timer.years }}</p>
-                        <p class="timer-label">Years</p>
-                    </div>
-                    <div class="timer-card">
-                        <p class="timer-value">{{ timer.months }}</p>
-                        <p class="timer-label">Months</p>
-                    </div>
-                    <div class="timer-card">
-                        <p class="timer-value">{{ timer.days }}</p>
-                        <p class="timer-label">Days</p>
+                    <div class="mt-10 grid grid-cols-3 gap-3 sm:gap-4">
+                        <div class="timer-card">
+                            <Transition name="digit-flip" mode="out-in">
+                                <p
+                                    :key="`${mood}-years-${timer.years}`"
+                                    class="timer-value"
+                                >
+                                    {{ timer.years }}
+                                </p>
+                            </Transition>
+                            <p class="timer-label">Years</p>
+                        </div>
+                        <div class="timer-card">
+                            <Transition name="digit-flip" mode="out-in">
+                                <p
+                                    :key="`${mood}-months-${timer.months}`"
+                                    class="timer-value"
+                                >
+                                    {{ timer.months }}
+                                </p>
+                            </Transition>
+                            <p class="timer-label">Months</p>
+                        </div>
+                        <div class="timer-card">
+                            <Transition name="digit-flip" mode="out-in">
+                                <p
+                                    :key="`${mood}-days-${timer.days}`"
+                                    class="timer-value"
+                                >
+                                    {{ timer.days }}
+                                </p>
+                            </Transition>
+                            <p class="timer-label">Days</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -258,6 +325,47 @@ onBeforeUnmount(() => {
 .hero-wave-layer {
     transform: translateZ(0);
     will-change: clip-path;
+}
+
+.digit-flip-enter-active,
+.digit-flip-leave-active {
+    transition:
+        opacity 0.28s ease,
+        transform 0.32s ease,
+        filter 0.32s ease;
+}
+
+.digit-flip-enter-from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+    filter: blur(1px);
+}
+
+.digit-flip-leave-to {
+    opacity: 0;
+    transform: translateY(-12px) scale(1.08);
+    filter: blur(1px);
+}
+
+.mood-copy-panel {
+    will-change: transform, opacity;
+}
+
+.mood-copy-enter-active,
+.mood-copy-leave-active {
+    transition:
+        opacity 0.28s ease,
+        transform 0.3s ease;
+}
+
+.mood-copy-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.mood-copy-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
 }
 
 @media (max-width: 767px) {

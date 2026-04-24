@@ -34,8 +34,41 @@ const outerDots = ref([]);
 const imageNodes = ref([]);
 const cardNodes = ref([]);
 const imageOrientations = ref([]);
+const lightboxOpen = ref(false);
+const lightboxSrc = ref('');
+const lightboxAlt = ref('');
+const lightboxTitle = ref('');
 let gsapContext = null;
 let relayoutTimer = null;
+
+const onLightboxEscape = (event) => {
+    if (event.key === 'Escape') {
+        closeMemoryLightbox();
+    }
+};
+
+const openMemoryLightbox = (memory) => {
+    if (!memory?.image) {
+        return;
+    }
+
+    lightboxSrc.value = memory.image;
+    lightboxAlt.value = memory.title || 'Journey memory';
+    lightboxTitle.value = memory.title || '';
+    lightboxOpen.value = true;
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', onLightboxEscape);
+    }
+};
+
+const closeMemoryLightbox = () => {
+    lightboxOpen.value = false;
+
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', onLightboxEscape);
+    }
+};
 
 const rowHeight = computed(() => {
     if (viewportWidth.value < 640) return 230;
@@ -399,6 +432,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('resize', onResize);
     if (typeof window !== 'undefined') {
         window.clearTimeout(relayoutTimer);
+        window.removeEventListener('keydown', onLightboxEscape);
     }
     gsapContext?.revert();
 });
@@ -491,13 +525,23 @@ onBeforeUnmount(() => {
                                     "
                                 >
                                     <div
-                                        class="relative isolate transition-all duration-300"
+                                        class="relative isolate cursor-pointer rounded-2xl transition-all duration-300 hover:ring-2 hover:ring-rose-300/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
                                         :class="memoryImageBoxClass(index)"
+                                        role="button"
+                                        tabindex="0"
+                                        :aria-label="`View larger photo: ${memory.title}`"
+                                        @click="openMemoryLightbox(memory)"
+                                        @keydown.enter.prevent="
+                                            openMemoryLightbox(memory)
+                                        "
+                                        @keydown.space.prevent="
+                                            openMemoryLightbox(memory)
+                                        "
                                     >
                                         <img
                                             :src="memory.image"
                                             :alt="memory.title"
-                                            class="h-full w-full rounded-2xl object-cover shadow-[0_8px_18px_rgba(219,39,119,0.25)]"
+                                            class="pointer-events-none h-full w-full rounded-2xl object-cover shadow-[0_8px_18px_rgba(219,39,119,0.25)]"
                                             @load="
                                                 onMemoryImageLoad($event, index)
                                             "
@@ -542,6 +586,40 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </section>
+
+    <Teleport to="body">
+        <div
+            v-if="lightboxOpen"
+            class="fixed inset-0 z-10000 flex flex-col items-center justify-center bg-rose-950/55 px-4 py-8 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            :aria-label="lightboxTitle || 'Memory photo'"
+            @click.self="closeMemoryLightbox"
+        >
+            <div
+                class="relative flex max-h-[90vh] w-full max-w-5xl flex-col items-center"
+            >
+                <button
+                    type="button"
+                    class="absolute -top-1 right-0 z-10 rounded-full border border-rose-200/80 bg-white/95 px-3 py-1.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 sm:-right-2 sm:px-4"
+                    @click="closeMemoryLightbox"
+                >
+                    Close
+                </button>
+                <img
+                    :src="lightboxSrc"
+                    :alt="lightboxAlt"
+                    class="max-h-[min(82vh,900px)] w-full max-w-full rounded-2xl border border-rose-100/60 object-contain shadow-[0_24px_60px_rgba(190,24,93,0.35)]"
+                />
+                <p
+                    v-if="lightboxTitle"
+                    class="mt-4 max-w-full truncate text-center text-sm font-medium text-white drop-shadow-md sm:text-base"
+                >
+                    {{ lightboxTitle }}
+                </p>
+            </div>
+        </div>
+    </Teleport>
 </template>
 
 <style scoped>
