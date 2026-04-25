@@ -24,7 +24,16 @@ const authModalMode = ref('login');
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? null);
-const visibleActions = computed(() => (user.value ? actions : guestActions));
+const isCoupleUser = computed(() =>
+    ['husband', 'wife'].includes(user.value?.role ?? ''),
+);
+const isGuest = computed(() => !user.value);
+const visibleActions = computed(() => {
+    if (isCoupleUser.value) return actions;
+    if (isGuest.value) return guestActions;
+    return [];
+});
+const shouldShowFab = computed(() => visibleActions.value.length > 0);
 
 const updateViewport = () => {
     isMobile.value = window.innerWidth < 768;
@@ -36,7 +45,7 @@ const actionOffset = (index) => {
     const authAngles = isMobile.value
         ? [-166, -136, -106, -78]
         : [-170, -143, -116, -89];
-    const angles = user.value ? authAngles : guestAngles;
+    const angles = isCoupleUser.value ? authAngles : guestAngles;
     const angle = ((angles[index] ?? -120) * Math.PI) / 180;
     return {
         x: Math.cos(angle) * radius,
@@ -106,8 +115,8 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<template v-if="!user || user.role === 'admin'">
-    <div ref="rootRef" class="fixed right-6 bottom-6 z-50">
+<template>
+    <div v-if="shouldShowFab" ref="rootRef" class="fixed right-6 bottom-6 z-50">
         <div
             v-for="(action, index) in visibleActions"
             :key="action.id"
@@ -263,6 +272,5 @@ onBeforeUnmount(() => {
         transition-duration: 0.01ms;
         transition-delay: 0ms;
     }
-
 }
 </style>

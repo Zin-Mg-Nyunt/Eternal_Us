@@ -8,7 +8,6 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { Ziggy } from './ziggy';
-import vue3Lottie from 'vue3-lottie';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const loadingRoot = document.getElementById('app-loading-logo');
@@ -51,7 +50,6 @@ createInertiaApp({
         })
             .use(plugin)
             .use(ZiggyVue, Ziggy)
-            .use(vue3Lottie)
             .mount(el ?? '');
 
         hideInitialLoading();

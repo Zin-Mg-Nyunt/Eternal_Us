@@ -32,7 +32,7 @@ class AnniversaryService
         $relationshipDays = $relDuration->d;
 
         $anniversaryBanner = null;
-        if ($now->isSameDay($dates["marriageDate"])) {
+        if ($now->isBirthday($dates["marriageDate"])) {
             $anniversaryBanner = [
                 'type' => 'marriage',
                 'message' => 'ပျော်ရွှင်စရာ မင်္ဂလာနှစ်ပတ်လည်နေ့ပါ သဲငယ်လေးရေ',

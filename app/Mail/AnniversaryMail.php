@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class AnniversaryMail extends Mailable
 {
@@ -17,7 +18,7 @@ class AnniversaryMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public $anniversary)
+    public function __construct(public $anniversary, public $wifeEmail)
     {
         //
     }
@@ -37,8 +38,12 @@ class AnniversaryMail extends Mailable
      */
     public function content(): Content
     {
+        $type = $this->anniversary['banner']['type'] === 'marriage' ? 'email.Marriage' : 'email.Relationship';
+        $emailAddress = $this->to[0]['address'];
+        $view = $emailAddress === $this->wifeEmail ? $type.'.romantic' : $type.'.announcement';
+        
         return new Content(
-            view: 'email.anniversary',
+            view: $view,
         );
     }
 

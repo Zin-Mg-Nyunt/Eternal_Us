@@ -9,6 +9,7 @@ import {
 } from 'vue';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { X } from 'lucide-vue-next';
 
 const props = defineProps({
     memories: {
@@ -593,7 +594,7 @@ onBeforeUnmount(() => {
     <Teleport to="body">
         <div
             v-if="lightboxOpen"
-            class="fixed inset-0 z-10000 flex flex-col items-center justify-center bg-rose-950/55 px-4 py-8 backdrop-blur-sm"
+            class="fixed inset-0 z-10000 flex flex-col items-center justify-center bg-rose-100/30 px-4 py-8 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
             :aria-label="lightboxTitle || 'Memory photo'"
@@ -604,10 +605,10 @@ onBeforeUnmount(() => {
             >
                 <button
                     type="button"
-                    class="absolute -top-1 right-0 z-10 rounded-full border border-rose-200/80 bg-white/95 px-3 py-1.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 sm:-right-2 sm:px-4"
+                    class="absolute top-1 right-1 z-10 cursor-pointer rounded-full border border-rose-200/80 bg-white/95 p-3 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50"
                     @click="closeMemoryLightbox"
                 >
-                    Close
+                    <X class="size-4" />
                 </button>
                 <img
                     :src="lightboxSrc"
@@ -616,7 +617,7 @@ onBeforeUnmount(() => {
                 />
                 <p
                     v-if="lightboxTitle"
-                    class="mt-4 max-w-full truncate text-center text-sm font-medium text-white drop-shadow-md sm:text-base"
+                    class="mt-4 max-w-full truncate text-center text-sm font-medium text-rose-800/80 drop-shadow-md sm:text-base"
                 >
                     {{ lightboxTitle }}
                 </p>

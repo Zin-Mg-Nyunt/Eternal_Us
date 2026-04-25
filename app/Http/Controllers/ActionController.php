@@ -209,12 +209,6 @@ class ActionController extends Controller
 
     public function addWish(Request $request)
     {
-        if (! $request->user()) {
-            return back()->withErrors([
-                'auth' => 'Please log in to submit a wish.',
-            ]);
-        }
-
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
         ]);
