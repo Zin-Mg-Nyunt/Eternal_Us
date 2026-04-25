@@ -13,13 +13,13 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::call(function(){
-    $users = User::where('email_verified_at', '!=', null)->get();
+    $users = User::whereNotNull('email_verified_at')->get();
     $wifeEmail = User::where('role', 'wife')->first()->email;
     $anniversary = AnniversaryService::getAnniversary();
 
-    if($anniversary['showBanner']){
-        foreach($users as $user){
-            Mail::to($user->email)->queue(new AnniversaryMail($anniversary, $wifeEmail));
-        }
+    if(!$anniversary['showBanner']) return;
+
+    foreach($users as $user){
+        Mail::to($user->email)->queue(new AnniversaryMail($anniversary, $wifeEmail));
     }
 })->dailyAt('08:00');

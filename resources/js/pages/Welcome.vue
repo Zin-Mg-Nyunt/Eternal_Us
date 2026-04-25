@@ -8,6 +8,7 @@ import FeedbackWall from '@/components/FeedbackWall.vue';
 import FeedbackForm from '@/components/FeedbackForm.vue';
 import FloatingRoseFab from '@/components/FloatingRoseFab.vue';
 import FabActionModal from '@/components/FabActionModal.vue';
+import EmailVerificationBanner from '@/components/EmailVerificationBanner.vue';
 
 const props = defineProps({
     journeyItems: {
@@ -210,6 +211,7 @@ const onEditItem = async ({ item, type }) => {
     />
     <FeedbackWall :feedbacks="wishes" />
     <FeedbackForm />
+    <EmailVerificationBanner />
     <FloatingRoseFab @select="onFabSelect" />
 
     <FabActionModal

@@ -2,72 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cover;
-use App\Models\Gallery;
-use App\Models\Journey;
-use App\Models\Wish;
+use App\Services\HomePageDataService;
+use App\Services\MediaManagerService;
+use App\Services\WishService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ActionController extends Controller
 {
+    public function __construct(
+        private readonly HomePageDataService $homePageDataService,
+        private readonly MediaManagerService $mediaManagerService,
+        private readonly WishService $wishService,
+    ) {}
+
     public function home(): Response
     {
-        $journeys = Journey::query()
-            ->get()
-            ->map(fn (Journey $journey) => [
-                'id' => $journey->id,
-                'title' => $journey->title,
-                'story' => $journey->story,
-                'image' => $journey->image_url,
-                'journeyDate' => optional($journey->journey_date)->format('Y-m-d'),
-                'date' => optional($journey->journey_date)->format('M d, Y')
-                    ?? optional($journey->created_at)->format('M d, Y')
-                    ?? 'Today',
-            ]);
-
-        $galleries = Gallery::query()
-            ->latest()
-            ->take(12)
-            ->get()
-            ->map(fn (Gallery $gallery) => [
-                'id' => $gallery->id,
-                'image' => $gallery->image_url,
-            ]);
-
-        $cover = Cover::query()->latest()->first();
-        $tones = ['bg-rose-100', 'bg-pink-100', 'bg-fuchsia-100', 'bg-rose-50'];
-        $wishes = Wish::query()
-            ->latest()
-            ->with('user:id,name')
-            ->get()
-            ->values()
-            ->map(fn (Wish $wish, int $index) => [
-                'id' => $wish->id,
-                'name' => $wish->user?->name ?? 'Unknown',
-                'message' => $wish->message,
-                'tone' => $tones[$index % count($tones)],
-            ]);
-
-        return Inertia::render('Welcome', [
-            'journeyItems' => $journeys,
-            'galleryItems' => $galleries,
-            'galleryPages' => Inertia::scroll(function () {
-                $paginator = Gallery::query()->latest()->paginate(20);
-                $paginator->setCollection(
-                    $paginator->getCollection()->map(fn (Gallery $gallery) => [
-                        'id' => $gallery->id,
-                        'image' => $gallery->image_url,
-                    ]),
-                );
-
-                return $paginator;
-            }),
-            'coverImage' => $cover?->image_url,
-            'wishes' => $wishes,
-        ]);
+        return Inertia::render('Welcome', $this->homePageDataService->buildPayload());
     }
 
     public function addJourney(Request $request)
@@ -79,14 +31,7 @@ class ActionController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $path = $request->file('image')->store('journeys', 's3');
-
-        Journey::create([
-            'title' => $validated['title'],
-            'story' => $validated['story'],
-            'image_url' => $path,
-            'journey_date' => $validated['journey_date'],
-        ]);
+        $this->mediaManagerService->createJourney($validated, $request->file('image'));
 
         return back();
 
@@ -102,24 +47,7 @@ class ActionController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $journey = Journey::query()->findOrFail($validated['id']);
-        $newImagePath = $journey->getRawOriginal('image_url');
-
-        if ($request->hasFile('image')) {
-            $oldPath = $journey->getRawOriginal('image_url');
-            if ($oldPath) {
-                Storage::disk('s3')->delete($oldPath);
-            }
-
-            $newImagePath = $request->file('image')->store('journeys', 's3');
-        }
-
-        $journey->update([
-            'title' => $validated['title'],
-            'story' => $validated['story'],
-            'image_url' => $newImagePath,
-            'journey_date' => $validated['journey_date'],
-        ]);
+        $this->mediaManagerService->updateJourney($validated, $request->file('image'));
 
         return back();
     }
@@ -130,11 +58,7 @@ class ActionController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $path = $request->file('image')->store('galleries', 's3');
-
-        Gallery::create([
-            'image_url' => $path,
-        ]);
+        $this->mediaManagerService->createGallery($request->file('image'));
 
         return back();
     }
@@ -146,19 +70,7 @@ class ActionController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $gallery = Gallery::query()->findOrFail($validated['id']);
-
-        if ($request->hasFile('image')) {
-            $oldPath = $gallery->getRawOriginal('image_url');
-            if ($oldPath) {
-                Storage::disk('s3')->delete($oldPath);
-            }
-
-            $newImagePath = $request->file('image')->store('galleries', 's3');
-            $gallery->update([
-                'image_url' => $newImagePath,
-            ]);
-        }
+        $this->mediaManagerService->updateGallery($validated, $request->file('image'));
 
         return back();
     }
@@ -169,18 +81,7 @@ class ActionController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $existingCover = Cover::query()->latest()->first();
-        $existingPath = $existingCover?->getRawOriginal('image_url');
-        if ($existingPath) {
-            Storage::disk('s3')->delete($existingPath);
-        }
-
-        $path = $request->file('image')->store('covers', 's3');
-
-        Cover::updateOrCreate(
-            ['singleton' => true],
-            ['image_url' => $path],
-        );
+        $this->mediaManagerService->upsertCover($request->file('image'));
 
         return back();
     }
@@ -191,18 +92,7 @@ class ActionController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $existingCover = Cover::query()->latest()->first();
-        $existingPath = $existingCover?->getRawOriginal('image_url');
-        if ($existingPath) {
-            Storage::disk('s3')->delete($existingPath);
-        }
-
-        $path = $request->file('image')->store('covers', 's3');
-
-        Cover::updateOrCreate(
-            ['singleton' => true],
-            ['image_url' => $path],
-        );
+        $this->mediaManagerService->upsertCover($request->file('image'));
 
         return back();
     }
@@ -213,10 +103,7 @@ class ActionController extends Controller
             'message' => 'required|string|max:1000',
         ]);
 
-        Wish::create([
-            'user_id' => $request->user()->id,
-            'message' => $validated['message'],
-        ]);
+        $this->wishService->createForUser($request->user(), $validated['message']);
 
         return back();
     }

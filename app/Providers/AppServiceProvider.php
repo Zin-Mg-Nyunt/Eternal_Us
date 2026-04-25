@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Gate::define('manage-couple-content', function (User $user): bool {
-            return in_array($user->role, ['husband', 'wife'], true);
+            return $user->role === 'husband' || $user->role === 'wife';
         });
     }
 

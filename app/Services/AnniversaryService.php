@@ -22,15 +22,6 @@ class AnniversaryService
         $relDuration = $now->diff($dates["relationshipStartDate"]);
         $marriageDuration = $now->diff($dates["marriageDate"]);
         
-        $marriageYears = $marriageDuration->y;
-        $marriageMonths = $marriageDuration->m;
-        $marriageDays = $marriageDuration->d;
-        
-        
-        $relationshipYears = $relDuration->y;
-        $relationshipMonths = $relDuration->m;
-        $relationshipDays = $relDuration->d;
-
         $anniversaryBanner = null;
         if ($now->isBirthday($dates["marriageDate"])) {
             $anniversaryBanner = [
@@ -44,21 +35,21 @@ class AnniversaryService
             ];
         }
         
-        $marriageLabel = $marriageYears." နှစ်ပြည့်";
-        $relationshipLabel = $relationshipYears." နှစ် ".($relationshipMonths > 0 ? "နှင့် {$relationshipMonths} လပြည့်" : "ပြည့်");
+        $marriageLabel = $marriageDuration->y." နှစ်ပြည့်";
+        $relationshipLabel = $relDuration->y." နှစ် ".($relDuration->m > 0 ? "နှင့် {$relDuration->m} လပြည့်" : "ပြည့်");
         
         return [
             'marriage' => [
-                'years' => $marriageYears,
-                'months' => $marriageMonths,
-                'days' => $marriageDays,
+                'years' => $marriageDuration->y,
+                'months' => $marriageDuration->m,
+                'days' => $marriageDuration->d,
                 'label' => $marriageLabel,
                 'dateFormat' => $dates["marriageDate"]->format('d M Y'),
             ],
             'relationship' => [
-                'years' => $relationshipYears,
-                'months' => $relationshipMonths,
-                'days' => $relationshipDays,
+                'years' => $relDuration->y,
+                'months' => $relDuration->m,
+                'days' => $relDuration->d,
                 'label' => $relationshipLabel,
                 'dateFormat' => $dates["relationshipStartDate"]->format('d M Y'),
             ],
