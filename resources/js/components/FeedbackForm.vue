@@ -240,7 +240,7 @@ const playSuccessAnimation = async () => {
     gsap.killTweensOf(balloonRefs.value);
 
     gsap.set(balloonRefs.value, {
-        opacity: 0.96,
+        opacity: 0,
         y: '100vh',
         xPercent: -50,
         transformOrigin: 'center center',
@@ -254,21 +254,27 @@ const playSuccessAnimation = async () => {
         },
     });
 
+    successTimeline.set(balloonRefs.value, {
+        opacity: 0,
+        y: '100vh',
+        xPercent: -50,
+    });
+
     successTimeline.to(balloonRefs.value, {
         y: '-20vh',
         opacity: 0.98,
-        duration: () => gsap.utils.random(4.8, 7.2),
-        ease: 'none',
-        stagger: { amount: 1.5, from: 'random' },
+        duration: () => gsap.utils.random(4.2, 5.8),
+        ease: 'power1.out',
+        stagger: { amount: 0.2, from: 'random' },
     });
 
     gsap.to(balloonRefs.value, {
         x: '+=30',
         repeat: -1,
         yoyo: true,
-        duration: () => gsap.utils.random(1, 1.6),
+        duration: () => gsap.utils.random(0.8, 1.2),
         ease: 'sine.inOut',
-        stagger: { amount: 1.5, from: 'random' },
+        stagger: { amount: 0.2, from: 'random' },
     });
 
     successTimeline.to(
@@ -399,7 +405,9 @@ onBeforeUnmount(() => {
                             :disabled="wishForm.processing"
                             class="rounded-full border border-rose-300 bg-linear-to-r from-rose-500 to-pink-400 px-6 py-2 font-semibold text-white shadow-[0_10px_22px_rgba(244,114,182,0.35)] transition hover:scale-[1.02] hover:from-rose-600 hover:to-pink-500"
                         >
-                            {{ wishForm.processing ? 'Submitting...' : 'Submit' }}
+                            {{
+                                wishForm.processing ? 'Submitting...' : 'Submit'
+                            }}
                         </button>
                     </div>
                 </form>
@@ -414,7 +422,7 @@ onBeforeUnmount(() => {
                 v-for="(balloon, index) in successBalloons"
                 :key="balloon.id"
                 :ref="(el) => setBalloonRef(el, index)"
-                class="absolute top-0"
+                class="absolute top-0 opacity-0"
                 :style="{
                     left: balloon.left,
                     transform: `translateX(-50%) scale(${balloon.scale}) rotate(${balloon.rotation}deg)`,

@@ -19,7 +19,7 @@ Schedule::call(function(){
 
     if($anniversary['showBanner']){
         foreach($users as $user){
-            Mail::to('zinmgnyunt99@gmail.com')->queue(new AnniversaryMail($anniversary, $wifeEmail));
+            Mail::to($user->email)->queue(new AnniversaryMail($anniversary, $wifeEmail));
         }
     }
 })->dailyAt('08:00');
