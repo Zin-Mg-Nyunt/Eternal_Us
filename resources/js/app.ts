@@ -21,26 +21,29 @@ const loadingApp = loadingRoot
 const hideInitialLoading = () => {
     const loadingOverlay = document.getElementById('app-loading');
 
-    console.log('Checking for loading overlay...', loadingOverlay);
+    if (!loadingOverlay) return;
 
-    if (!loadingOverlay) {
-        console.log('Overlay not found, skipping...');
-        return;
-    }
+    console.log('Forcing hide now!');
 
-    if (loadingOverlay?.classList.contains('is-hidden')) {
-        return;
-    }
+    // CSS class ကို အားမကိုးတော့ဘဲ JS နဲ့ အတင်းဖျောက်မယ်
+    loadingOverlay.style.display = 'none';
+    loadingOverlay.style.opacity = '0';
+    loadingOverlay.style.visibility = 'hidden';
 
-    console.log('Loading being hidden now!');
-    loadingOverlay.classList.add('is-hidden');
-    window.setTimeout(() => {
+    // ၄။ Logo Animation ကိုပါ ရပ်ပြီး ဖျက်မယ်
+    if (loadingApp) {
         loadingApp?.$el?.remove?.();
-        loadingOverlay.remove();
+    }
+
+    // ၅။ DOM ထဲကပါ လုံးဝ ဖြုတ်ချပစ်မယ်
+    window.setTimeout(() => {
+        if (loadingOverlay.parentNode) {
+            loadingOverlay.parentNode.removeChild(loadingOverlay);
+        }
     }, 420);
 };
 
-setTimeout(hideInitialLoading, 3000);
+setTimeout(hideInitialLoading, 5000);
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
