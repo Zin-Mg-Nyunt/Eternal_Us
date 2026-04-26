@@ -30,6 +30,8 @@ const hideInitialLoading = () => {
     }, 420);
 };
 
+setTimeout(hideInitialLoading, 5000);
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {

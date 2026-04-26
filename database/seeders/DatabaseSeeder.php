@@ -20,13 +20,13 @@ class DatabaseSeeder extends Seeder
                 'name'=>"Zin Maung Nyunt(KoKo)",
                 'email'=>"zinmgnyunt99@gmail.com",
                 'password'=>"password",
-                'role'=>"admin",
+                'role'=>"husband",
             ],
             [
                 'name'=>"Thinzar Soe(ThaeLay)",
                 'email'=>"thinzarsoe14720@gmail.com",
                 'password'=>"password",
-                'role'=>"admin",
+                'role'=>"wife",
             ]
         ];
         collect($users)->each(function($user){
