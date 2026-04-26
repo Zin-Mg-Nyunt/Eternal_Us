@@ -11,7 +11,7 @@ import { Ziggy } from './ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const loadingRoot = document.getElementById('app-loading-logo');
-const loadingOverlay = document.getElementById('app-loading');
+
 const loadingApp = loadingRoot
     ? createApp({
           render: () => h(AppLogoIcon),
@@ -19,10 +19,20 @@ const loadingApp = loadingRoot
     : null;
 
 const hideInitialLoading = () => {
+    const loadingOverlay = document.getElementById('app-loading');
+
+    console.log('Checking for loading overlay...', loadingOverlay);
+
     if (!loadingOverlay) {
+        console.log('Overlay not found, skipping...');
         return;
     }
 
+    if (loadingOverlay?.classList.contains('is-hidden')) {
+        return;
+    }
+
+    console.log('Loading being hidden now!');
     loadingOverlay.classList.add('is-hidden');
     window.setTimeout(() => {
         loadingApp?.$el?.remove?.();
@@ -30,7 +40,7 @@ const hideInitialLoading = () => {
     }, 420);
 };
 
-setTimeout(hideInitialLoading, 5000);
+setTimeout(hideInitialLoading, 3000);
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
