@@ -113,8 +113,12 @@ const petals = Array.from({ length: 16 }, (_, index) => ({
                     v-for="petal in petals"
                     :key="petal.id"
                     src="/image/pink_rose_petal.png"
-                    alt="pink rose petal"
+                    alt=""
                     class="rose-petal object-contain"
+                    loading="lazy"
+                    decoding="async"
+                    fetchpriority="low"
+                    aria-hidden="true"
                     :style="{
                         left: petal.left,
                         animationDelay: petal.delay,

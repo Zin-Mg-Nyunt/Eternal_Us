@@ -34,8 +34,9 @@
         <link rel="icon" href="/favicon.png" sizes="any">
         <link rel="apple-touch-icon" href="/favicon.png">
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+        @if (filled(data_get($page ?? [], 'props.coverImage')))
+            <link rel="preload" as="image" href="{{ data_get($page, 'props.coverImage') }}" fetchpriority="high">
+        @endif
 
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
@@ -86,35 +87,6 @@
                 transition: opacity 0.35s ease, transform 0.38s ease, filter 0.38s ease;
                 transform: scale(1);
                 filter: blur(0);
-            }
-
-            #app-loading p {
-                margin: 0;
-                font-size: 0.9rem;
-                letter-spacing: 0.08em;
-                font-weight: 700;
-            }
-
-            #app-loading.is-hidden {
-                opacity: 0;
-                transform: scale(1.035);
-                filter: blur(1px);
-                pointer-events: none;
-            }
-
-            #app-loading.is-hidden #app-loading-logo-wrap {
-                animation: app-loading-logo-out 0.36s ease forwards;
-            }
-
-            @keyframes app-loading-logo-out {
-                from {
-                    transform: scale(1);
-                    opacity: 1;
-                }
-                to {
-                    transform: scale(1.18);
-                    opacity: 0;
-                }
             }
         </style>
     </body>
