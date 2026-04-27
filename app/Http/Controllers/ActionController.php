@@ -32,6 +32,7 @@ class ActionController extends Controller
         ]);
 
         $this->mediaManagerService->createJourney($validated, $request->file('image'));
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
 
@@ -48,6 +49,7 @@ class ActionController extends Controller
         ]);
 
         $this->mediaManagerService->updateJourney($validated, $request->file('image'));
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
     }
@@ -59,6 +61,7 @@ class ActionController extends Controller
         ]);
 
         $this->mediaManagerService->createGallery($request->file('image'));
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
     }
@@ -71,6 +74,7 @@ class ActionController extends Controller
         ]);
 
         $this->mediaManagerService->updateGallery($validated, $request->file('image'));
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
     }
@@ -82,6 +86,7 @@ class ActionController extends Controller
         ]);
 
         $this->mediaManagerService->upsertCover($request->file('image'));
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
     }
@@ -93,6 +98,7 @@ class ActionController extends Controller
         ]);
 
         $this->mediaManagerService->upsertCover($request->file('image'));
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
     }
@@ -104,6 +110,7 @@ class ActionController extends Controller
         ]);
 
         $this->wishService->createForUser($request->user(), $validated['message']);
+        $this->homePageDataService->clearHomePageCache();
 
         return back();
     }

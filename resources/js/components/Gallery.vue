@@ -136,6 +136,8 @@ const closeAllPhotosModal = () => {
                         :src="image.src"
                         :alt="image.alt || `Memory photo ${index + 1}`"
                         class="w-full rounded-3xl border border-rose-100 object-cover shadow-[0_12px_34px_rgba(251,113,133,0.22)] transition duration-300 ease-out group-hover:scale-105 group-hover:shadow-[0_20px_48px_rgba(244,114,182,0.34)]"
+                        loading="lazy"
+                        decoding="async"
                     />
                 </article>
             </div>
@@ -207,6 +209,8 @@ const closeAllPhotosModal = () => {
                                                 :src="item.image"
                                                 :alt="`Gallery photo ${Number(index) + 1}`"
                                                 class="w-full rounded-3xl border border-rose-100 object-cover shadow-[0_12px_34px_rgba(251,113,133,0.22)]"
+                                                loading="lazy"
+                                                decoding="async"
                                             />
                                         </article>
                                     </div>

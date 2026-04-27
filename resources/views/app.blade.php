@@ -50,6 +50,26 @@
                 <img src="/favicon.png" alt="Loading" class="w-16 h-16">
             </div>
         </div>
+        <script>
+            (function() {
+                var fallbackMs = 3000;
+
+                function forceHideLoading() {
+                    var loadingOverlay = document.getElementById('app-loading');
+                    if (!loadingOverlay) return;
+
+                    loadingOverlay.style.display = 'none';
+                    loadingOverlay.style.opacity = '0';
+                    loadingOverlay.style.visibility = 'hidden';
+
+                    if (loadingOverlay.parentNode) {
+                        loadingOverlay.parentNode.removeChild(loadingOverlay);
+                    }
+                }
+
+                window.setTimeout(forceHideLoading, fallbackMs);
+            })();
+        </script>
         <x-inertia::app />
         <style>
             #app-loading {

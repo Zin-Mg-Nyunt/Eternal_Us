@@ -10,7 +10,10 @@ import { initializeFlashToast } from '@/lib/flashToast';
 import { Ziggy } from './ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-const loadingRoot = document.getElementById('app-loading-logo');
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+const loadingRoot = isBrowser
+    ? document.getElementById('app-loading-logo')
+    : null;
 
 const loadingApp = loadingRoot
     ? createApp({
@@ -19,11 +22,11 @@ const loadingApp = loadingRoot
     : null;
 
 const hideInitialLoading = () => {
+    if (!isBrowser) return;
+
     const loadingOverlay = document.getElementById('app-loading');
 
     if (!loadingOverlay) return;
-
-    console.log('Forcing hide now!');
 
     // CSS class ကို အားမကိုးတော့ဘဲ JS နဲ့ အတင်းဖျောက်မယ်
     loadingOverlay.style.display = 'none';
@@ -43,7 +46,11 @@ const hideInitialLoading = () => {
     }, 420);
 };
 
-setTimeout(hideInitialLoading, 5000);
+if (isBrowser) {
+    // Browser lifecycle events အတွက် fallback hide
+    window.addEventListener('load', hideInitialLoading, { once: true });
+    window.addEventListener('error', hideInitialLoading, { once: true });
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -67,6 +74,7 @@ createInertiaApp({
             .use(ZiggyVue, Ziggy)
             .mount(el ?? '');
 
+        // Inertia/Vue app mount ပြီးချိန်မှာ ချက်ချင်း loading ဖြုတ်
         hideInitialLoading();
     },
     progress: {
@@ -74,8 +82,10 @@ createInertiaApp({
     },
 });
 
-// This will set light / dark mode on page load...
-initializeTheme();
+if (isBrowser) {
+    // This will set light / dark mode on page load...
+    initializeTheme();
 
-// This will listen for flash toast data from the server...
-initializeFlashToast();
+    // This will listen for flash toast data from the server...
+    initializeFlashToast();
+}

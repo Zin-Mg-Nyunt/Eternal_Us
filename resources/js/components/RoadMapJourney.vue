@@ -249,21 +249,6 @@ const onMemoryImageLoad = (event, index) => {
     scheduleRelayout();
 };
 
-const detectAllImageOrientations = () => {
-    imageOrientations.value = props.memories.map(() => 'landscape');
-
-    props.memories.forEach((memory, index) => {
-        if (!memory?.image || typeof window === 'undefined') return;
-        const img = new Image();
-        img.onload = () => {
-            imageOrientations.value[index] =
-                img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape';
-            scheduleRelayout();
-        };
-        img.src = memory.image;
-    });
-};
-
 const scheduleRelayout = () => {
     if (typeof window === 'undefined') return;
     window.clearTimeout(relayoutTimer);
@@ -418,7 +403,6 @@ watch(
     () => props.memories.length,
     async () => {
         resetRefCollections();
-        detectAllImageOrientations();
         await syncNodeHeights();
         setupGsapAnimations();
     },
@@ -428,7 +412,6 @@ watch(
 onMounted(() => {
     syncViewportWidth();
     window.addEventListener('resize', onResize);
-    detectAllImageOrientations();
     syncNodeHeights().then(setupGsapAnimations);
 });
 
@@ -546,6 +529,8 @@ onBeforeUnmount(() => {
                                             :src="memory.image"
                                             :alt="memory.title"
                                             class="pointer-events-none h-full w-full rounded-2xl object-cover shadow-[0_8px_18px_rgba(219,39,119,0.25)]"
+                                            loading="lazy"
+                                            decoding="async"
                                             @load="
                                                 onMemoryImageLoad($event, index)
                                             "
