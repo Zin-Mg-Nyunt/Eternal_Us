@@ -7,6 +7,7 @@ import {
     ref,
     watch,
 } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { X } from 'lucide-vue-next';
@@ -15,6 +16,15 @@ const props = defineProps({
     memories: {
         type: Array,
         default: () => [],
+    },
+    pagination: {
+        type: Object,
+        default: () => ({
+            currentPage: 1,
+            lastPage: 1,
+            prevPage: null,
+            nextPage: null,
+        }),
     },
 });
 
@@ -29,12 +39,14 @@ const ROADMAP_MASK_ID = 'roadmap-path-reveal-mask';
 const sectionRef = ref(null);
 const pathRef = ref(null);
 const viewportWidth = ref(1280);
+const sectionHeight = ref(1000);
 const memoryNodes = ref([]);
 const nodeHeights = ref([]);
 const outerDots = ref([]);
 const imageNodes = ref([]);
 const cardNodes = ref([]);
 const imageOrientations = ref([]);
+const imageLoadedStates = ref([]);
 const lightboxOpen = ref(false);
 const lightboxSrc = ref('');
 const lightboxAlt = ref('');
@@ -132,7 +144,7 @@ const nodeXPair = computed(() => {
 
 const verticalGap = computed(() => {
     if (viewportWidth.value < 640) return 34;
-    if (viewportWidth.value < 768) return 42;
+    if (viewportWidth.value < 768) return 52;
     return 56;
 });
 
@@ -159,12 +171,16 @@ const nodeTopPositions = computed(() => {
 });
 
 const totalHeight = computed(() => {
-    if (!props.memories.length) return 420;
+    if (!props.memories.length) {
+        return Math.max(760, sectionHeight.value);
+    }
+
     const lastIndex = props.memories.length - 1;
     const lastTop = nodeTopPositions.value[lastIndex] ?? TOP_OFFSET;
     const lastHeight =
         nodeHeights.value[lastIndex] ?? estimatedNodeHeight.value;
-    return lastTop + lastHeight + TOP_OFFSET;
+
+    return Math.max(760, lastTop + lastHeight + TOP_OFFSET);
 });
 
 const points = computed(() => {
@@ -246,6 +262,7 @@ const onMemoryImageLoad = (event, index) => {
     if (!(target instanceof HTMLImageElement)) return;
     imageOrientations.value[index] =
         target.naturalHeight > target.naturalWidth ? 'portrait' : 'landscape';
+    imageLoadedStates.value[index] = true;
     scheduleRelayout();
 };
 
@@ -265,7 +282,14 @@ const resetRefCollections = () => {
     imageNodes.value = [];
     cardNodes.value = [];
     imageOrientations.value = [];
+    imageLoadedStates.value = props.memories.map(() => false);
 };
+
+const memorySignature = computed(() =>
+    props.memories
+        .map((memory) => `${memory?.id ?? ''}:${memory?.image ?? ''}`)
+        .join('|'),
+);
 
 const syncNodeHeights = async () => {
     await nextTick();
@@ -393,14 +417,34 @@ const syncViewportWidth = () => {
     viewportWidth.value = sectionRef.value?.clientWidth || window.innerWidth;
 };
 
+const syncSectionHeight = () => {
+    if (typeof window === 'undefined') return;
+    sectionHeight.value = sectionRef.value?.clientHeight || window.innerHeight;
+};
+
 const onResize = async () => {
     syncViewportWidth();
+    syncSectionHeight();
     await syncNodeHeights();
     setupGsapAnimations();
 };
 
+const goToJourneyPage = (page) => {
+    if (!page || page < 1 || page === props.pagination?.currentPage) return;
+    router.get(
+        window.location.pathname,
+        { journey_page: page },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+            only: ['journeyItems', 'journeyPagination'],
+        },
+    );
+};
+
 watch(
-    () => props.memories.length,
+    memorySignature,
     async () => {
         resetRefCollections();
         await syncNodeHeights();
@@ -411,6 +455,7 @@ watch(
 
 onMounted(() => {
     syncViewportWidth();
+    syncSectionHeight();
     window.addEventListener('resize', onResize);
     syncNodeHeights().then(setupGsapAnimations);
 });
@@ -428,7 +473,7 @@ onBeforeUnmount(() => {
 <template>
     <section
         ref="sectionRef"
-        class="relative -mb-1 min-h-screen bg-rose-50 px-4 py-16 sm:px-6 md:py-24"
+        class="relative -mb-1 min-h-screen bg-rose-50 px-4 py-12 sm:px-6 md:py-16"
     >
         <div class="no-scrollbar mx-auto max-w-6xl">
             <div class="mb-10 text-center md:mb-14">
@@ -439,7 +484,6 @@ onBeforeUnmount(() => {
                     Love Journey
                 </h2>
             </div>
-
             <div
                 class="relative mx-auto"
                 :style="{ minHeight: `${totalHeight}px` }"
@@ -525,11 +569,25 @@ onBeforeUnmount(() => {
                                             openMemoryLightbox(memory)
                                         "
                                     >
+                                        <div
+                                            v-if="!imageLoadedStates[index]"
+                                            class="absolute inset-0 animate-pulse rounded-2xl bg-rose-100/90"
+                                        />
                                         <img
                                             :src="memory.image"
                                             :alt="memory.title"
                                             class="pointer-events-none h-full w-full rounded-2xl object-cover shadow-[0_8px_18px_rgba(219,39,119,0.25)]"
-                                            loading="lazy"
+                                            :class="
+                                                imageLoadedStates[index]
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0'
+                                            "
+                                            :loading="
+                                                index < 2 ? 'eager' : 'lazy'
+                                            "
+                                            :fetchpriority="
+                                                index === 0 ? 'high' : 'auto'
+                                            "
                                             decoding="async"
                                             @load="
                                                 onMemoryImageLoad($event, index)
@@ -572,6 +630,31 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
                 </article>
+            </div>
+
+            <div
+                class="relative z-20 mt-12 flex items-center justify-center gap-4 pb-6"
+            >
+                <button
+                    type="button"
+                    class="rounded-full border border-rose-300 bg-white px-4 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="!pagination?.prevPage"
+                    @click="goToJourneyPage(pagination?.prevPage)"
+                >
+                    ←
+                </button>
+                <p class="text-xs tracking-[0.2em] text-rose-500 uppercase">
+                    Page {{ pagination?.currentPage ?? 1 }} /
+                    {{ pagination?.lastPage ?? 1 }}
+                </p>
+                <button
+                    type="button"
+                    class="rounded-full border border-rose-300 bg-white px-4 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="!pagination?.nextPage"
+                    @click="goToJourneyPage(pagination?.nextPage)"
+                >
+                    →
+                </button>
             </div>
         </div>
     </section>

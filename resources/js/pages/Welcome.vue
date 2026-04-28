@@ -19,6 +19,15 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    journeyPagination: {
+        type: Object,
+        default: () => ({
+            currentPage: 1,
+            lastPage: 1,
+            prevPage: null,
+            nextPage: null,
+        }),
+    },
     galleryPages: {
         type: Object,
         default: () => ({ data: [] }),
@@ -159,12 +168,8 @@ const onEditItem = async ({ item, type }) => {
 <template>
     <HeroSection :cover-image="coverImage" />
     <RoadMapJourney
-        :memories="
-            props.journeyItems.map((item) => ({
-                ...item,
-                description: item.story ?? '',
-            }))
-        "
+        :memories="props.journeyItems"
+        :pagination="props.journeyPagination"
     />
     <Gallery
         :images="
