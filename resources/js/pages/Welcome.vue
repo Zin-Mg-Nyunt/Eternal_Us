@@ -58,7 +58,50 @@ const onFabSelect = (type) => {
     isModalOpen.value = true;
 };
 
-const onModalSubmit = ({
+const compressImage = async (file) => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+
+        reader.onload = () => {
+            const image = new Image();
+            image.src = reader.result;
+
+            image.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                const maxSize = 900;
+                let width = image.width;
+                let height = image.height;
+
+                if (width > maxSize || height > maxSize) {
+                    if (width > height) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    } else {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                ctx.drawImage(image, 0, 0, width, height);
+                canvas.toBlob(
+                    (blob) => {
+                        resolve(blob);
+                    },
+                    'image/webp',
+                    0.7,
+                );
+            };
+        };
+    });
+};
+
+const onModalSubmit = async ({
     id,
     type,
     journeyFile,
@@ -71,12 +114,13 @@ const onModalSubmit = ({
     errors.value = {};
 
     if (type === 'journey') {
+        const compressedImage = await compressImage(journeyFile);
         const payload = {
             id: id ?? null,
             title: journeyTitle?.trim() || 'Untitled Journey',
             story: journeyDescription?.trim() || 'No story yet',
             journey_date: journeyDate,
-            image: journeyFile,
+            image: compressedImage,
         };
 
         if (id) {
@@ -106,9 +150,10 @@ const onModalSubmit = ({
     }
 
     if (type === 'gallery') {
+        const compressedImage = await compressImage(galleryFile);
         const payload = {
             id: id ?? null,
-            image: galleryFile,
+            image: compressedImage,
         };
 
         if (id) {
@@ -138,8 +183,9 @@ const onModalSubmit = ({
     }
 
     if (type === 'cover') {
+        const compressedImage = await compressImage(coverFile);
         const payload = {
-            image: coverFile,
+            image: compressedImage,
         };
 
         router.post(route('cover.update'), payload, {

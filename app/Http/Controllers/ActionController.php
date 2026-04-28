@@ -30,7 +30,6 @@ class ActionController extends Controller
             'journey_date' => 'required|date',
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
-
         $this->mediaManagerService->createJourney($validated, $request->file('image'));
         $this->homePageDataService->clearHomePageCache();
 

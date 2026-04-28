@@ -366,7 +366,7 @@ const setupGsapAnimations = async () => {
         ScrollTrigger.create({
             trigger: sectionRef.value,
             start: 'top 78%',
-            end: 'bottom 42%',
+            end: 'bottom 85%',
             scrub: true,
             onUpdate: (self) => {
                 maxProgress = Math.max(maxProgress, self.progress);
@@ -476,7 +476,7 @@ onBeforeUnmount(() => {
         class="relative -mb-1 min-h-screen bg-rose-50 px-4 py-12 sm:px-6 md:py-16"
     >
         <div class="no-scrollbar mx-auto max-w-6xl">
-            <div class="mb-10 text-center md:mb-14">
+            <div class="text-center">
                 <p class="text-sm tracking-[0.24em] text-rose-500 uppercase">
                     Our Milestones
                 </p>

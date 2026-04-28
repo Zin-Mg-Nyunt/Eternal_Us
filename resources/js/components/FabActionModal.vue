@@ -114,7 +114,7 @@ const onCoverFileChange = (event) => {
     form.clearErrors('coverFile');
 };
 
-const validateForm = () => {
+const validateSuccess = () => {
     form.clearErrors();
 
     if (props.type === 'journey') {
@@ -158,7 +158,7 @@ const onSubmit = () => {
         return;
     }
 
-    if (!validateForm()) return;
+    if (!validateSuccess()) return;
 
     const payload = {
         type: props.type,
