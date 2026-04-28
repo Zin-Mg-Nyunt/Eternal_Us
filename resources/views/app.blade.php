@@ -4,6 +4,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ config('app.url') }}">
+        <meta property="og:title" content="{{ config('app.name') }}">
+        <meta property="og:description" content="စတင်ခဲ့တဲ့ နေ့ရက်ကနေ ဒီကနေ့အထိ... တစ်ရက်ချင်းစီရဲ့ အဖိုးတန်တဲ့ အခိုက်အတန့်တွေကို စုစည်းထားတဲ့ ငါတို့နှစ်ယောက်ရဲ့ အချစ်မှတ်စု။">
+        <meta property="og:image" content="https://dmaywe6m5a5c5.cloudfront.net/covers/lA9TvCXNurNAAQDEpwcxpCMJUq62P2nNm8MxzfeL.webp">
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ config('app.name') }}">
+        <meta name="twitter:description" content="စတင်ခဲ့တဲ့ နေ့ရက်ကနေ ဒီကနေ့အထိ... တစ်ရက်ချင်းစီရဲ့ အဖိုးတန်တဲ့ အခိုက်အတန့်တွေကို စုစည်းထားတဲ့ ငါတို့နှစ်ယောက်ရဲ့ အချစ်မှတ်စု။">
+        <meta name="twitter:image" content="https://dmaywe6m5a5c5.cloudfront.net/covers/lA9TvCXNurNAAQDEpwcxpCMJUq62P2nNm8MxzfeL.webp">
+
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
             (function() {
