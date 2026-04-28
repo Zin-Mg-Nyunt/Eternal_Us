@@ -44,12 +44,23 @@ class MediaManagerService
         ]);
     }
 
-    public function createGallery(UploadedFile $image): void
+    public function createGallery(?UploadedFile $image, ?array $images): void
     {
-        $path = $image->store('galleries', 's3');
-        Gallery::create([
-            'image_url' => $path,
-        ]);
+        if($images){
+            $dataArray = [];
+            foreach($images as $imageItem){
+                $dataArray[] = [
+                    'image_url' => $imageItem->store('galleries', 's3'),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            Gallery::insert($dataArray);
+        }
+        if($image){
+            $path = $image->store('galleries', 's3');
+            Gallery::create(['image_url' => $path]);
+        }
     }
 
     public function updateGallery(array $data, ?UploadedFile $image): void

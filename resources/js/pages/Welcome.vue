@@ -59,6 +59,9 @@ const onFabSelect = (type) => {
 };
 
 const compressImage = async (file) => {
+    if (!file) {
+        return null;
+    }
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -108,6 +111,7 @@ const onModalSubmit = async ({
     journeyTitle,
     journeyDescription,
     journeyDate,
+    galleryFiles,
     galleryFile,
     coverFile,
 }) => {
@@ -150,35 +154,36 @@ const onModalSubmit = async ({
     }
 
     if (type === 'gallery') {
-        const compressedImage = await compressImage(galleryFile);
+        let compressedImages = null;
+        let compressedImage = null;
+
+        if (!id && galleryFiles && galleryFiles.length > 1) {
+            compressedImages = await Promise.all(
+                galleryFiles.map(async (file) => await compressImage(file)),
+            );
+        } else if (galleryFile) {
+            compressedImage = await compressImage(galleryFile);
+        }
+
         const payload = {
             id: id ?? null,
+            images: compressedImages,
             image: compressedImage,
         };
 
-        if (id) {
-            router.post(route('gallery.update'), payload, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    errors.value = {};
-                    isModalOpen.value = false;
-                },
-                onError: (backendErrors) => {
-                    errors.value = backendErrors ?? {};
-                },
-            });
-        } else {
-            router.post(route('gallery.add'), payload, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    errors.value = {};
-                    isModalOpen.value = false;
-                },
-                onError: (backendErrors) => {
-                    errors.value = backendErrors ?? {};
-                },
-            });
-        }
+        const routeName = id ? 'gallery.update' : 'gallery.add';
+
+        router.post(route(routeName), payload, {
+            preserveScroll: true,
+            onSuccess: () => {
+                errors.value = {};
+                isModalOpen.value = false;
+            },
+            onError: (backendErrors) => {
+                errors.value = backendErrors ?? {};
+            },
+        });
+
         return;
     }
 

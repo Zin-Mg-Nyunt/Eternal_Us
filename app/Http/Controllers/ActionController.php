@@ -56,10 +56,12 @@ class ActionController extends Controller
     public function addGallery(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|required_without:images|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images' => 'nullable|required_without:image|array|min:1',
+            'images.*' => 'required_without:image|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $this->mediaManagerService->createGallery($request->file('image'));
+        $this->mediaManagerService->createGallery($request->file('image'),$request->file('images'));
         $this->homePageDataService->clearHomePageCache();
 
         return back();

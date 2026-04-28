@@ -37,6 +37,7 @@ const form = useForm({
     journeyDescription: '',
     journeyDate: '',
     galleryFile: null,
+    galleryFiles: [],
     coverFile: null,
 });
 const journeyPreviewUrl = ref(null);
@@ -94,15 +95,25 @@ const onJourneyFileChange = (event) => {
 };
 
 const onGalleryFileChange = (event) => {
-    const [file] = event.target.files ?? [];
-    revokePreview(galleryPreview.value?.url);
-    form.galleryFile = file ?? null;
-    galleryPreview.value = file
-        ? {
-              name: file.name,
-              url: URL.createObjectURL(file),
-          }
-        : null;
+    const files = event.target.files;
+    if (!files || !files.length) return;
+
+    const filesArray = Array.from(files);
+    galleryPreview.value?.items?.forEach((item) => revokePreview(item.url));
+
+    if (filesArray.length > 1) {
+        form.galleryFiles = filesArray;
+        form.galleryFile = null;
+    } else {
+        form.galleryFile = filesArray[0];
+        form.galleryFiles = [];
+    }
+    galleryPreview.value = {
+        items: filesArray.map((file) => ({
+            name: file.name,
+            url: URL.createObjectURL(file),
+        })),
+    };
     form.clearErrors('galleryFile');
 };
 
@@ -167,6 +178,7 @@ const onSubmit = () => {
         journeyTitle: form.journeyTitle,
         journeyDescription: form.journeyDescription,
         journeyDate: form.journeyDate,
+        galleryFiles: form.galleryFiles,
         galleryFile: form.galleryFile,
         coverFile: form.coverFile,
     };
@@ -186,6 +198,7 @@ const normalizeBackendErrors = (incoming = {}) => {
         journey_date: 'journeyDate',
         journey_file: 'journeyFile',
         date: 'journeyDate',
+        gallery_files: 'galleryFiles',
         gallery_file: 'galleryFile',
         cover_file: 'coverFile',
     };
@@ -395,6 +408,7 @@ onBeforeUnmount(() => {
                             <input
                                 type="file"
                                 accept="image/*"
+                                :multiple="!initialData?.id"
                                 class="block w-full rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm text-rose-700 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-100 file:px-3 file:py-1.5 file:text-rose-700 file:transition hover:file:bg-rose-200"
                                 @change="onGalleryFileChange"
                             />
@@ -410,21 +424,23 @@ onBeforeUnmount(() => {
                         </label>
                         <div
                             v-if="galleryPreview"
-                            class="grid grid-cols-1 gap-2 sm:max-w-56"
+                            class="grid grid-cols-2 gap-2 sm:grid-cols-4"
                         >
                             <article
+                                v-for="item in galleryPreview.items"
+                                :key="item.url"
                                 class="overflow-hidden rounded-xl border border-rose-200 bg-white p-1.5 shadow-sm"
                             >
                                 <img
-                                    :src="galleryPreview.url"
-                                    :alt="galleryPreview.name"
+                                    :src="item.url"
+                                    :alt="item.name"
                                     class="h-24 w-full rounded-lg object-cover sm:h-28"
                                 />
                                 <p
                                     class="mt-1 truncate text-[11px] text-rose-500"
-                                    :title="galleryPreview.name"
+                                    :title="item.name"
                                 >
-                                    {{ galleryPreview.name }}
+                                    {{ item.name }}
                                 </p>
                             </article>
                         </div>
