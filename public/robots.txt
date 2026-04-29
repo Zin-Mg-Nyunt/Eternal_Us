@@ -1,2 +1,7 @@
+User-agent: facebookexternalhit
+Allow: /
+
 User-agent: *
-Disallow:
+Allow: /
+
+Sitemap: https://eternal-us.zinmaungnyunt.com/sitemap.xml
